@@ -3,10 +3,13 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+.coverage
+htmlcov/
+pytest.ini
+requirements-dev.txt
+tests/
 .env
 .env.*
 *.log
-tests/
 .git/
 .gitignore
-
