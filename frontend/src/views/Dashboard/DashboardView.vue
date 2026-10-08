@@ -50,15 +50,32 @@ async function handleCreate() {
   }
 }
 
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+
+const showDeleteConfirm = ref(false)
+const appToDelete = ref<{ id: string; name: string } | null>(null)
+const isDeleting = ref(false)
+
 async function handleToggle(id: string, e: Event) {
   e.stopPropagation()
   await appStore.toggleApplication(id)
 }
 
-async function handleDelete(id: string, name: string, e: Event) {
+function promptDelete(id: string, name: string, e: Event) {
   e.stopPropagation()
-  if (confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
-    await appStore.deleteApplication(id)
+  appToDelete.value = { id, name }
+  showDeleteConfirm.value = true
+}
+
+async function confirmDelete() {
+  if (!appToDelete.value) return
+  isDeleting.value = true
+  try {
+    await appStore.deleteApplication(appToDelete.value.id)
+    showDeleteConfirm.value = false
+    appToDelete.value = null
+  } finally {
+    isDeleting.value = false
   }
 }
 </script>
@@ -150,7 +167,7 @@ async function handleDelete(id: string, name: string, e: Event) {
           </button>
           <button
             class="btn btn--sm btn--danger-outline"
-            @click="handleDelete(app.id, app.name, $event)"
+            @click="promptDelete(app.id, app.name, $event)"
           >
             Delete
           </button>
@@ -208,6 +225,18 @@ async function handleDelete(id: string, name: string, e: Event) {
         </form>
       </div>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <ConfirmDialog
+      :show="showDeleteConfirm"
+      title="Delete Application"
+      :message="`Are you sure you want to delete '${appToDelete?.name}'? This will permanently delete all associated controllers, endpoints, and mock configurations.`"
+      confirm-text="Delete Application"
+      variant="danger"
+      :loading="isDeleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteConfirm = false"
+    />
   </div>
 </template>
 

@@ -936,7 +936,7 @@ async function executeTestRequest() {
   color: #9999b3;
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input, .form-textarea {
   padding: 0.625rem 0.875rem;
   background: #18181c;
   border: 1px solid #2a2a35;
@@ -944,6 +944,30 @@ async function executeTestRequest() {
   color: #f1f1f8;
   font-size: 0.9375rem;
   outline: none;
+}
+
+.form-select {
+  padding: 0.625rem 2.25rem 0.625rem 0.875rem;
+  background-color: #18181c;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371718a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+  border: 1px solid #2a2a35;
+  border-radius: 8px;
+  color: #f1f1f8;
+  font-size: 0.9375rem;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.form-select:focus {
+  border-color: #7c3aed;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .result-stats {

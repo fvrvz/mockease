@@ -8,13 +8,13 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/auth/LoginView.vue'),
-      meta: { requiresGuest: true },
+      meta: { requiresGuest: true, title: 'Login' },
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('@/views/auth/RegisterView.vue'),
-      meta: { requiresGuest: true },
+      meta: { requiresGuest: true, title: 'Register' },
     },
     {
       path: '/',
@@ -25,16 +25,19 @@ const router = createRouter({
           path: '',
           name: 'dashboard',
           component: () => import('@/views/Dashboard/DashboardView.vue'),
+          meta: { title: 'Dashboard' },
         },
         {
           path: 'apps/:id',
           name: 'application',
           component: () => import('@/views/Application/ApplicationView.vue'),
+          meta: { title: 'Application Workspace' },
         },
         {
           path: 'apps/:id/settings',
           name: 'application-settings',
           component: () => import('@/views/Application/ApplicationSettings.vue'),
+          meta: { title: 'Application Settings' },
         },
       ],
     },
@@ -42,6 +45,7 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFound.vue'),
+      meta: { title: 'Not Found' },
     },
   ],
 })
@@ -57,6 +61,11 @@ router.beforeEach((to) => {
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     return { name: 'dashboard' }
   }
+})
+
+router.afterEach((to) => {
+  const title = (to.meta.title as string) || ''
+  document.title = title ? `${title} • MockEase` : 'MockEase'
 })
 
 export default router
