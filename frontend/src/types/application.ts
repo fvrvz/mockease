@@ -1,3 +1,5 @@
+import type { AuthConfig } from './controller'
+
 export interface Application {
   id: string
   user_id: string
@@ -11,6 +13,7 @@ export interface Application {
   endpoint_count?: number
   enabled_endpoint_count?: number
   disabled_endpoint_count?: number
+  auth_config?: AuthConfig | null
 }
 
 export interface CreateApplicationRequest {
@@ -22,4 +25,6 @@ export interface UpdateApplicationRequest {
   name?: string
   description?: string
   is_enabled?: boolean
+  auth_config?: Partial<AuthConfig> | null
 }
+
