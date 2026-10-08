@@ -20,20 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # --- ENUM types ---
-    auth_type = sa.Enum("none", "api_key", "bearer", "basic", name="auth_type")
-    http_method = sa.Enum("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", name="http_method")
-    auth_inherit = sa.Enum("inherit", "override_on", "override_off", name="auth_inherit")
-    response_body_type = sa.Enum("json", "text", "empty", name="response_body_type")
-    param_type = sa.Enum("query", "path", "header", name="param_type")
-    request_body_type = sa.Enum("json", "form", "urlencoded", "raw", "none", name="request_body_type")
-
-    auth_type.create(op.get_bind(), checkfirst=True)
-    http_method.create(op.get_bind(), checkfirst=True)
-    auth_inherit.create(op.get_bind(), checkfirst=True)
-    response_body_type.create(op.get_bind(), checkfirst=True)
-    param_type.create(op.get_bind(), checkfirst=True)
-    request_body_type.create(op.get_bind(), checkfirst=True)
+    # Enum columns will create types automatically if needed.
 
     # --- users ---
     op.create_table(

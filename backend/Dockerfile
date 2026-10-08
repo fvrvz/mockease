@@ -22,6 +22,7 @@ COPY --from=builder /install /usr/local
 # Copy source
 COPY src/ ./src/
 COPY migrations/ ./migrations/
+COPY scripts/ ./scripts/
 COPY alembic.ini .
 
 EXPOSE 8000

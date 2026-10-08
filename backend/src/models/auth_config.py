@@ -21,7 +21,7 @@ class AuthConfig(Base):
     __tablename__ = "auth_configs"
 
     auth_type: Mapped[AuthType] = mapped_column(
-        Enum(AuthType, name="auth_type"), nullable=False, default=AuthType.NONE
+        Enum(AuthType, name="auth_type", values_callable=lambda obj: [e.value for e in obj]), nullable=False, default=AuthType.NONE
     )
 
     # API Key
