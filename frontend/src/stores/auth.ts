@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { useRouter } from 'vue-router'
 import type { User } from '@/types/auth'
 import { authService } from '@/services/auth'
 
