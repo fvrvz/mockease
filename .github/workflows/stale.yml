@@ -1,0 +1,25 @@
+name: Stale Branches & PRs Cleanup
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight
+  workflow_dispatch:      # Allows manual trigger anytime
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cleanup-stale:
+    name: Mark & Close Stale Pull Requests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: 'This pull request has been inactive for 14 days and has been marked as stale.'
+          close-pr-message: 'This pull request was closed due to 7 days of inactivity after being marked stale.'
+          days-before-stale: 14
+          days-before-close: 7
+          exempt-pr-labels: 'pinned,security,in-progress'
+          operations-per-run: 50
