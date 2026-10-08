@@ -86,7 +86,7 @@ function beautifyJson() {
     const macros: string[] = []
     const placeholderPattern = (idx: number) => `"___MACRO_HOLDER_${idx}___"`
     
-    let temp = bodyText.value.replace(macroRegex, (match) => {
+    const temp = bodyText.value.replace(macroRegex, (match) => {
       macros.push(match)
       return placeholderPattern(macros.length - 1)
     })

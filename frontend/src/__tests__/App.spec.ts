@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest'
-
 import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+import AppLogo from '../components/AppLogo.vue'
 
-describe('App', () => {
-  it('mounts renders properly', () => {
-    const wrapper = mount(App)
-    expect(wrapper.text()).toContain('You did it!')
+describe('AppLogo', () => {
+  it('renders SVG puzzle emblem properly', () => {
+    const wrapper = mount(AppLogo, {
+      props: {
+        size: 32,
+      },
+    })
+    expect(wrapper.find('svg').exists()).toBe(true)
+    expect(wrapper.find('rect').exists()).toBe(true)
+    expect(wrapper.find('path').exists()).toBe(true)
   })
 })
