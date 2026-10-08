@@ -2,6 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -38,7 +39,7 @@ async function handleRegister() {
   <div class="auth-page">
     <div class="auth-card">
       <div class="auth-card__header">
-        <span class="auth-logo">🧩</span>
+        <AppLogo :size="48" class="auth-logo" />
         <h1 class="auth-title">MockEase</h1>
         <p class="auth-subtitle">Create your account</p>
       </div>
@@ -150,40 +151,45 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #0f0f11;
-  padding: 1rem;
+  background: radial-gradient(circle at 50% 20%, rgba(124, 58, 237, 0.08) 0%, rgba(9, 9, 11, 1) 70%);
+  padding: 1.5rem;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  background: #18181c;
-  border: 1px solid #2a2a35;
-  border-radius: 12px;
-  padding: 2rem;
+  max-width: 440px;
+  background: var(--bg-surface, #121217);
+  border: 1px solid var(--border-subtle, #22222e);
+  border-radius: 16px;
+  padding: 2.25rem;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
 }
 
 .auth-card__header {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .auth-logo {
-  font-size: 2rem;
-  display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.875rem;
 }
 
 .auth-title {
-  font-size: 1.5rem;
+  font-size: 1.625rem;
   font-weight: 700;
-  color: #a78bfa;
+  background: linear-gradient(135deg, #f4f4f7 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
   font-size: 0.875rem;
-  color: #6666a0;
+  color: var(--text-muted, #9494a8);
   margin: 0;
 }
 

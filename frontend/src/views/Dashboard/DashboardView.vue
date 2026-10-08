@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationStore } from '@/stores/applications'
+import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 const appStore = useApplicationStore()
@@ -110,7 +111,7 @@ async function confirmDelete() {
 
     <!-- Empty State -->
     <div v-else-if="appStore.applications.length === 0" class="dashboard__empty">
-      <span class="empty-icon">🧩</span>
+      <AppLogo :size="48" class="empty-logo" />
       <h2 class="empty-title">No applications yet</h2>
       <p class="empty-desc">Create your first application to start designing and consuming mock APIs.</p>
       <button class="btn btn--primary" @click="showCreateModal = true">
@@ -258,13 +259,16 @@ async function confirmDelete() {
 .dashboard__title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #f1f1f8;
+  background: linear-gradient(135deg, #f4f4f7 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0 0 0.25rem;
+  letter-spacing: -0.025em;
 }
 
 .dashboard__subtitle {
   font-size: 0.875rem;
-  color: #71718a;
+  color: var(--text-muted, #9494a8);
   margin: 0;
 }
 
@@ -274,39 +278,46 @@ async function confirmDelete() {
 
 .search-input {
   width: 100%;
-  padding: 0.625rem 1rem;
-  background: #18181c;
-  border: 1px solid #2a2a35;
-  border-radius: 8px;
-  color: #f1f1f8;
+  padding: 0.75rem 1.125rem;
+  background: var(--bg-surface, #121217);
+  border: 1px solid var(--border-subtle, #22222e);
+  border-radius: 10px;
+  color: var(--text-main, #f4f4f7);
   font-size: 0.9375rem;
   outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 .search-input:focus {
-  border-color: #7c3aed;
+  border-color: var(--border-focus, #8b5cf6);
+  background: var(--bg-surface-elevated, #181820);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
 .apps-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
 }
 
 .app-card {
-  background: #18181c;
-  border: 1px solid #2a2a35;
-  border-radius: 10px;
-  padding: 1.25rem;
+  background: var(--bg-surface, #121217);
+  border: 1px solid var(--border-subtle, #22222e);
+  border-radius: 14px;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1rem;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .app-card:hover {
-  transform: translateY(-2px);
-  border-color: #3b3b4f;
+  transform: translateY(-3px);
+  background: var(--bg-surface-elevated, #181820);
+  border-color: var(--border-strong, #323242);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.15);
 }
 
 .app-card__header {
