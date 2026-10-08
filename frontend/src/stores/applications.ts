@@ -16,8 +16,9 @@ export const useApplicationStore = defineStore('applications', () => {
     error.value = null
     try {
       applications.value = await applicationService.list()
-    } catch (err: any) {
-      error.value = err?.response?.data?.detail ?? 'Failed to load applications'
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: string } } }
+      error.value = e?.response?.data?.detail ?? 'Failed to load applications'
     } finally {
       loading.value = false
     }
