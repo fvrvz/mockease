@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.cache.redis import cache_get, cache_set
 from src.db.session import get_db
 from src.models.application import Application
 from src.models.controller import Controller
@@ -17,6 +18,7 @@ from src.models.auth_config import AuthConfig
 from src.mock_runtime.auth_validator import validate_auth
 from src.mock_runtime.resolver import match_endpoint, normalize_path
 from src.mock_runtime.template_engine import render_template
+from src.mock_runtime.validator import validate_request_params, validate_request_body
 
 router = APIRouter(tags=["mock-runtime"])
 
@@ -120,12 +122,31 @@ async def handle_mock_request(
         )
 
     query_params = dict(request.query_params)
+
+    # Validate Query & Header request parameters
+    param_val_res = validate_request_params(matched_ep.request_params, query_params, req_headers)
+    if not param_val_res.is_valid:
+        return JSONResponse(
+            status_code=param_val_res.status_code,
+            content={"error": "INVALID_REQUEST_PARAMETERS", "message": param_val_res.error_message},
+        )
+
+    raw_body = await request.body()
     parsed_body = None
     try:
-        if request.headers.get("content-type", "").startswith("application/json"):
-            parsed_body = await request.json()
+        if req_headers.get("content-type", "").startswith("application/json"):
+            import json
+            parsed_body = json.loads(raw_body.decode("utf-8")) if raw_body else None
     except Exception:
-        pass
+        parsed_body = None
+
+    # Validate Request Body
+    body_val_res = validate_request_body(matched_ep.request_body, raw_body, parsed_body)
+    if not body_val_res.is_valid:
+        return JSONResponse(
+            status_code=body_val_res.status_code,
+            content={"error": "INVALID_REQUEST_BODY", "message": body_val_res.error_message},
+        )
 
     context = {
         "request": {
