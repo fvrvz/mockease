@@ -25,6 +25,13 @@ const filteredApps = computed(() => {
   )
 })
 
+function closeCreateModal() {
+  showCreateModal.value = false
+  newAppName.value = ''
+  newAppDesc.value = ''
+  createError.value = null
+}
+
 async function handleCreate() {
   if (!newAppName.value.trim()) return
   isCreating.value = true
@@ -34,9 +41,7 @@ async function handleCreate() {
       name: newAppName.value.trim(),
       description: newAppDesc.value.trim() || undefined,
     })
-    showCreateModal.value = false
-    newAppName.value = ''
-    newAppDesc.value = ''
+    closeCreateModal()
     router.push({ name: 'application', params: { id: created.id } })
   } catch (err: any) {
     createError.value = err?.response?.data?.detail ?? 'Failed to create application'
@@ -154,7 +159,7 @@ async function handleDelete(id: string, name: string, e: Event) {
     </div>
 
     <!-- Create Application Modal -->
-    <div v-if="showCreateModal" class="modal-backdrop" @click.self="showCreateModal = false">
+    <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
       <div class="modal">
         <h2 class="modal__title">Create Application</h2>
         <form @submit.prevent="handleCreate">
@@ -188,7 +193,7 @@ async function handleDelete(id: string, name: string, e: Event) {
             <button
               type="button"
               class="btn btn--ghost"
-              @click="showCreateModal = false"
+              @click="closeCreateModal"
             >
               Cancel
             </button>

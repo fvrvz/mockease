@@ -114,20 +114,28 @@ async def create_application(
         await db.flush()
         app.auth_config = ac
 
+    reloaded_q = (
+        select(Application)
+        .where(Application.id == app.id)
+        .options(selectinload(Application.auth_config))
+    )
+    reloaded_app = (await db.execute(reloaded_q)).scalar_one()
+
     return ApplicationResponse(
-        id=app.id,
-        name=app.name,
-        slug=app.slug,
-        description=app.description,
-        is_enabled=app.is_enabled,
-        created_at=app.created_at,
-        updated_at=app.updated_at,
+        id=reloaded_app.id,
+        name=reloaded_app.name,
+        slug=reloaded_app.slug,
+        description=reloaded_app.description,
+        is_enabled=reloaded_app.is_enabled,
+        created_at=reloaded_app.created_at,
+        updated_at=reloaded_app.updated_at,
         controller_count=0,
         endpoint_count=0,
         enabled_endpoint_count=0,
         disabled_endpoint_count=0,
-        auth_config=map_auth_config(app.auth_config),
+        auth_config=map_auth_config(reloaded_app.auth_config),
     )
+
 
 
 @router.get("/{app_id}", response_model=ApplicationResponse)

@@ -120,18 +120,26 @@ async def create_controller(
         await db.flush()
         ctrl.auth_config = ac
 
-    return ControllerResponse(
-        id=ctrl.id,
-        application_id=ctrl.application_id,
-        name=ctrl.name,
-        description=ctrl.description,
-        is_enabled=ctrl.is_enabled,
-        position=ctrl.position,
-        created_at=ctrl.created_at,
-        updated_at=ctrl.updated_at,
-        endpoint_count=0,
-        auth_config=map_auth_config(ctrl.auth_config),
+    reloaded_ctrl_q = (
+        select(Controller)
+        .where(Controller.id == ctrl.id)
+        .options(selectinload(Controller.auth_config))
     )
+    reloaded_ctrl = (await db.execute(reloaded_ctrl_q)).scalar_one()
+
+    return ControllerResponse(
+        id=reloaded_ctrl.id,
+        application_id=reloaded_ctrl.application_id,
+        name=reloaded_ctrl.name,
+        description=reloaded_ctrl.description,
+        is_enabled=reloaded_ctrl.is_enabled,
+        position=reloaded_ctrl.position,
+        created_at=reloaded_ctrl.created_at,
+        updated_at=reloaded_ctrl.updated_at,
+        endpoint_count=0,
+        auth_config=map_auth_config(reloaded_ctrl.auth_config),
+    )
+
 
 
 @router.get("/controllers/{controller_id}", response_model=ControllerResponse)
