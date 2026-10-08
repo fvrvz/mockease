@@ -23,7 +23,6 @@ COPY --from=builder /install /usr/local
 COPY src/ ./src/
 COPY migrations/ ./migrations/
 COPY scripts/ ./scripts/
-COPY tests/ ./tests/
 COPY alembic.ini .
 
 EXPOSE 8000

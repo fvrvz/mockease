@@ -44,8 +44,9 @@ async function handleCreate() {
     })
     closeCreateModal()
     router.push({ name: 'application', params: { id: created.id } })
-  } catch (err: any) {
-    createError.value = err?.response?.data?.detail ?? 'Failed to create application'
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { detail?: string } } }
+    createError.value = e?.response?.data?.detail ?? 'Failed to create application'
   } finally {
     isCreating.value = false
   }

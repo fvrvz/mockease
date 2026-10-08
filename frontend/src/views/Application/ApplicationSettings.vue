@@ -2,7 +2,7 @@
 import { ref, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { applicationService } from '@/services/applications'
-import type { Application } from '@/types/application'
+import type { Application, UpdateApplicationRequest } from '@/types/application'
 import type { AuthType } from '@/types/controller'
 
 const route = useRoute()
@@ -35,7 +35,7 @@ onMounted(async () => {
     form.description = data.description || ''
     form.is_enabled = data.is_enabled
 
-    const auth = (data as any).auth_config
+    const auth = data.auth_config
     if (auth) {
       form.auth_type = auth.auth_type || 'none'
       form.api_key_header = auth.api_key_header || 'X-API-Key'
@@ -44,7 +44,7 @@ onMounted(async () => {
       form.basic_username = auth.basic_username || ''
       form.basic_password = auth.basic_password || ''
     }
-  } catch (err: any) {
+  } catch {
     errorMessage.value = 'Failed to load application settings.'
   } finally {
     loading.value = false
@@ -57,11 +57,12 @@ async function handleSave() {
   errorMessage.value = ''
 
   try {
-    const updatePayload: any = {
+    const updatePayload: UpdateApplicationRequest = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       is_enabled: form.is_enabled,
       auth_config: {
+        id: form.name, // or let backend assign
         auth_type: form.auth_type,
         api_key_header: form.auth_type === 'api_key' ? form.api_key_header : null,
         api_key_value: form.auth_type === 'api_key' ? form.api_key_value : null,
@@ -74,8 +75,9 @@ async function handleSave() {
     const updated = await applicationService.update(appId, updatePayload)
     app.value = updated
     successMessage.value = 'Settings saved successfully!'
-  } catch (err: any) {
-    errorMessage.value = err?.response?.data?.detail || 'Failed to update settings.'
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { detail?: string } } }
+    errorMessage.value = e?.response?.data?.detail || 'Failed to update settings.'
   } finally {
     saving.value = false
   }

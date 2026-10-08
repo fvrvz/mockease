@@ -6,7 +6,7 @@ import { controllerService } from '@/services/controllers'
 import { endpointService } from '@/services/endpoints'
 import type { Application } from '@/types/application'
 import type { Controller } from '@/types/controller'
-import type { ApiEndpoint, HttpMethod, AuthInherit } from '@/types/endpoint'
+import type { ApiEndpoint, HttpMethod } from '@/types/endpoint'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,7 +32,7 @@ const newEpBody = ref('{\n  "message": "Hello from mock"\n}')
 
 // Testing UI state
 const testTab = ref<'editor' | 'test' | 'curl'>('editor')
-const testResponse = ref<{ status: number; timeMs: number; data: any; headers: any } | null>(null)
+const testResponse = ref<{ status: number; timeMs: number; data: unknown; headers: Record<string, string> } | null>(null)
 const isTesting = ref(false)
 
 // JSON Editor State & Real-time Validation
@@ -49,8 +49,8 @@ function validateBodyText(text: string) {
   try {
     JSON.parse(masked)
     jsonError.value = null
-  } catch (err: any) {
-    jsonError.value = err.message || 'Invalid JSON syntax'
+  } catch (err: unknown) {
+    jsonError.value = err instanceof Error ? err.message : 'Invalid JSON syntax'
   }
 }
 
@@ -98,8 +98,8 @@ function beautifyJson() {
       })
       bodyText.value = formatted
       jsonError.value = null
-    } catch (err: any) {
-      jsonError.value = err.message || 'Cannot beautify invalid JSON'
+    } catch (err: unknown) {
+      jsonError.value = err instanceof Error ? err.message : 'Cannot beautify invalid JSON'
     }
   }
 }
@@ -210,9 +210,12 @@ async function toggleEndpoint(ep: ApiEndpoint, e: Event) {
 
 async function saveSelectedEndpoint() {
   if (!selectedEndpoint.value) return
-  let bodyData: any = bodyText.value
+  let bodyData: Record<string, unknown> | string = bodyText.value
   try {
-    bodyData = JSON.parse(bodyText.value)
+    const parsed = JSON.parse(bodyText.value)
+    if (parsed && typeof parsed === 'object') {
+      bodyData = parsed as Record<string, unknown>
+    }
   } catch {
     // Keep as string
   }
@@ -269,7 +272,7 @@ async function executeTestRequest() {
       headersObj[k] = v
     })
 
-    let data: any
+    let data: unknown
     const contentType = res.headers.get('content-type') || ''
     if (contentType.includes('application/json')) {
       data = await res.json()
@@ -283,11 +286,12 @@ async function executeTestRequest() {
       data,
       headers: headersObj,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Network request failed'
     testResponse.value = {
       status: 0,
       timeMs: Math.round(performance.now() - start),
-      data: { error: err.message || 'Network request failed' },
+      data: { error: errorMsg },
       headers: {},
     }
   } finally {
