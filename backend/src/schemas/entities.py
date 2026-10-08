@@ -158,3 +158,4 @@ class EndpointResponse(BaseModel):
     request_params: list[RequestParamSchema] = []
     request_body: RequestBodySchema | None = None
     response_headers: list[ResponseHeaderSchema] = []
+

@@ -35,3 +35,4 @@ export const applicationService = {
     return res.data
   },
 }
+

@@ -73,3 +73,4 @@ export const useApplicationStore = defineStore('applications', () => {
     deleteApplication,
   }
 })
+
