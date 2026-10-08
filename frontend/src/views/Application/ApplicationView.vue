@@ -35,6 +35,80 @@ const testTab = ref<'editor' | 'test' | 'curl'>('editor')
 const testResponse = ref<{ status: number; timeMs: number; data: any; headers: any } | null>(null)
 const isTesting = ref(false)
 
+// JSON Editor State & Real-time Validation
+const bodyText = ref('')
+const jsonError = ref<string | null>(null)
+
+function validateBodyText(text: string) {
+  if (!text.trim()) {
+    jsonError.value = null
+    return
+  }
+  // Mask {{...}} placeholders with valid JSON string values so mock macros don't cause false positives
+  const masked = text.replace(/\{\{[^{}]+\}\}/g, '"__MACRO__"')
+  try {
+    JSON.parse(masked)
+    jsonError.value = null
+  } catch (err: any) {
+    jsonError.value = err.message || 'Invalid JSON syntax'
+  }
+}
+
+function handleBodyInput(e: Event) {
+  const val = (e.target as HTMLTextAreaElement).value
+  bodyText.value = val
+  validateBodyText(val)
+}
+
+function handleTabKey(e: KeyboardEvent) {
+  const textarea = e.target as HTMLTextAreaElement
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  bodyText.value = bodyText.value.substring(0, start) + '  ' + bodyText.value.substring(end)
+  // Reposition caret
+  setTimeout(() => {
+    textarea.selectionStart = textarea.selectionEnd = start + 2
+  }, 0)
+  validateBodyText(bodyText.value)
+}
+
+function beautifyJson() {
+  if (!bodyText.value.trim()) return
+  try {
+    // If it's standard JSON without macros
+    const parsed = JSON.parse(bodyText.value)
+    bodyText.value = JSON.stringify(parsed, null, 2)
+    jsonError.value = null
+    return
+  } catch {
+    // If it has macros, replace macros with placeholders, format, then restore
+    const macroRegex = /\{\{[^{}]+\}\}/g
+    const macros: string[] = []
+    const placeholderPattern = (idx: number) => `"___MACRO_HOLDER_${idx}___"`
+    
+    let temp = bodyText.value.replace(macroRegex, (match) => {
+      macros.push(match)
+      return placeholderPattern(macros.length - 1)
+    })
+    
+    try {
+      let formatted = JSON.stringify(JSON.parse(temp), null, 2)
+      macros.forEach((macro, idx) => {
+        formatted = formatted.replace(placeholderPattern(idx), macro)
+      })
+      bodyText.value = formatted
+      jsonError.value = null
+    } catch (err: any) {
+      jsonError.value = err.message || 'Cannot beautify invalid JSON'
+    }
+  }
+}
+
+function insertMacro(macro: string) {
+  bodyText.value += (bodyText.value.length ? ' ' : '') + macro
+  validateBodyText(bodyText.value)
+}
+
 const methodColors: Record<HttpMethod, string> = {
   GET: '#34d399',
   POST: '#60a5fa',
@@ -82,6 +156,12 @@ async function loadEndpoints(ctrlId: string) {
 function selectEndpoint(ep: ApiEndpoint) {
   selectedEndpoint.value = ep
   testResponse.value = null
+  if (typeof ep.response_body === 'object' && ep.response_body !== null) {
+    bodyText.value = JSON.stringify(ep.response_body, null, 2)
+  } else {
+    bodyText.value = String(ep.response_body || '')
+  }
+  validateBodyText(bodyText.value)
 }
 
 async function handleCreateController() {
@@ -130,13 +210,11 @@ async function toggleEndpoint(ep: ApiEndpoint, e: Event) {
 
 async function saveSelectedEndpoint() {
   if (!selectedEndpoint.value) return
-  let bodyData = selectedEndpoint.value.response_body
-  if (typeof bodyData === 'string') {
-    try {
-      bodyData = JSON.parse(bodyData)
-    } catch {
-      // Keep as string
-    }
+  let bodyData: any = bodyText.value
+  try {
+    bodyData = JSON.parse(bodyText.value)
+  } catch {
+    // Keep as string
   }
 
   const updated = await endpointService.update(selectedEndpoint.value.id, {
@@ -393,17 +471,43 @@ async function executeTestRequest() {
 
             <div class="form-group">
               <div class="json-header">
-                <label class="form-label">Response Body (JSON / Template)</label>
-                <span class="helper-hint">
-                  Supports: <code>\{\{uuid\}\}</code>, <code>\{\{timestamp\}\}</code>, <code>\{\{random.name\}\}</code>, <code>\{\{request.query.param\}\}</code>
-                </span>
+                <div class="json-header__left">
+                  <label class="form-label">Response Body (JSON / Template)</label>
+                  <div class="macro-tags">
+                    <span class="macro-tag" v-text="'{{uuid}}'" @click="insertMacro('{{uuid}}')"></span>
+                    <span class="macro-tag" v-text="'{{timestamp}}'" @click="insertMacro('{{timestamp}}')"></span>
+                    <span class="macro-tag" v-text="'{{random.name}}'" @click="insertMacro('{{random.name}}')"></span>
+                    <span class="macro-tag" v-text="'{{random.email}}'" @click="insertMacro('{{random.email}}')"></span>
+                    <span class="macro-tag" v-text="'{{request.query.param}}'" @click="insertMacro('{{request.query.param}}')"></span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn--sm btn--outline beautify-btn"
+                  @click="beautifyJson"
+                >
+                  ✨ Beautify JSON
+                </button>
               </div>
+
               <textarea
-                :value="typeof selectedEndpoint.response_body === 'object' ? JSON.stringify(selectedEndpoint.response_body, null, 2) : selectedEndpoint.response_body"
+                :value="bodyText"
                 class="form-textarea code-area"
-                rows="12"
-                @input="selectedEndpoint.response_body = ($event.target as HTMLTextAreaElement).value"
+                :class="{ 'code-area--error': !!jsonError }"
+                rows="13"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+                autocorrect="off"
+                placeholder='{\n  "status": "success",\n  "id": "{{uuid}}"\n}'
+                @keydown.tab.prevent="handleTabKey"
+                @input="handleBodyInput"
               ></textarea>
+
+              <div v-if="jsonError" class="json-error-banner">
+                <span class="error-icon">⚠️</span>
+                <span class="error-text">JSON Syntax Error: {{ jsonError }}</span>
+              </div>
             </div>
           </div>
 
@@ -743,17 +847,72 @@ async function executeTestRequest() {
 .json-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.json-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.macro-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
   align-items: center;
-  margin-bottom: 0.375rem;
 }
 
-.helper-hint {
-  font-size: 0.75rem;
-  color: #71718a;
-}
-
-.helper-hint code {
+.macro-tag {
+  background: #1f1f27;
   color: #a78bfa;
+  font-family: monospace;
+  font-size: 0.6875rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #3b3b4f;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+
+.macro-tag:hover {
+  background: #2b2b38;
+  color: #c4b5fd;
+  border-color: #7c3aed;
+}
+
+.beautify-btn {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.code-area--error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.json-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+}
+
+.error-icon {
+  font-size: 0.875rem;
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-family: monospace;
 }
 
 .form-row {
