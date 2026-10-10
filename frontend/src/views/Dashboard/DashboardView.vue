@@ -260,7 +260,7 @@ async function confirmDelete() {
 .dashboard__title {
   font-size: 1.75rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f4f4f7 0%, #c4b5fd 100%);
+  background: linear-gradient(135deg, var(--text-main, #f4f4f7) 0%, var(--primary, #7c3aed) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0 0 0.25rem;
@@ -424,18 +424,19 @@ async function confirmDelete() {
 }
 
 .modal {
-  background: #18181c;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface, #18181c);
+  border: 1px solid var(--border-subtle, #2a2a35);
   border-radius: 12px;
   padding: 1.75rem;
   width: 100%;
   max-width: 460px;
+  box-shadow: var(--shadow-lg);
 }
 
 .modal__title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   margin-bottom: 1.25rem;
 }
 
@@ -449,21 +450,22 @@ async function confirmDelete() {
 .form-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #9999b3;
+  color: var(--text-muted, #9494a8);
 }
 
 .form-input, .form-textarea {
   padding: 0.625rem 0.875rem;
-  background: #0f0f11;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface-elevated, #0f0f11);
+  border: 1px solid var(--border-subtle, #2a2a35);
   border-radius: 8px;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   font-size: 0.9375rem;
   outline: none;
+  transition: border-color var(--transition-fast, 0.15s ease);
 }
 
 .form-input:focus, .form-textarea:focus {
-  border-color: #7c3aed;
+  border-color: var(--primary, #7c3aed);
 }
 
 .modal__footer {

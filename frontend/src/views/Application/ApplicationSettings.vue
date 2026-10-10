@@ -84,6 +84,8 @@ async function handleSave() {
 }
 
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
+import PaletteSelector from '@/components/PaletteSelector.vue'
 const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
 
@@ -201,6 +203,26 @@ async function confirmDelete() {
         </div>
       </section>
 
+      <!-- Appearance & Theme Section -->
+      <section class="settings-card">
+        <h2 class="card-title">Theme & Color Palette</h2>
+        <p class="card-subtitle">Select between dark, light, or system appearance and customize color palette presets.</p>
+        <div style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Theme Mode</label>
+          <ThemeSwitcher />
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div>
+            <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Dark Theme Palettes</label>
+            <PaletteSelector theme-target="dark" />
+          </div>
+          <div>
+            <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Light Theme Palettes</label>
+            <PaletteSelector theme-target="light" />
+          </div>
+        </div>
+      </section>
+
       <!-- Danger Zone -->
       <section class="settings-card card--danger">
         <h2 class="card-title text-danger">Danger Zone</h2>
@@ -250,18 +272,19 @@ async function confirmDelete() {
 }
 
 .back-link {
-  color: #71718a;
+  color: var(--text-muted, #9494a8);
   text-decoration: none;
   font-size: 0.875rem;
+  transition: color var(--transition-fast, 0.15s ease);
 }
 .back-link:hover {
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
 }
 
 .settings-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   margin: 0;
 }
 
@@ -272,8 +295,8 @@ async function confirmDelete() {
 }
 
 .settings-card {
-  background: #141418;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface, #121217);
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -281,13 +304,13 @@ async function confirmDelete() {
 .card-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   margin: 0 0 0.25rem;
 }
 
 .card-subtitle {
   font-size: 0.875rem;
-  color: #71718a;
+  color: var(--text-muted, #9494a8);
   margin: 0 0 1.25rem;
 }
 
@@ -310,46 +333,46 @@ async function confirmDelete() {
 .form-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #9999b3;
+  color: var(--text-muted, #9494a8);
 }
 
 .form-input, .form-textarea {
   padding: 0.625rem 0.875rem;
-  background: #18181c;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface-elevated, #181820);
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 8px;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   font-size: 0.9375rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast, 0.15s ease);
 }
 
 .form-select {
   padding: 0.625rem 2.25rem 0.625rem 0.875rem;
-  background-color: #18181c;
+  background-color: var(--bg-surface-elevated, #181820);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371718a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 16px;
-  border: 1px solid #2a2a35;
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 8px;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
   font-size: 0.9375rem;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast, 0.15s ease);
 }
 
 .form-input:focus, .form-textarea:focus {
-  border-color: #7c3aed;
+  border-color: var(--primary, #7c3aed);
 }
 
 .form-select:focus {
-  border-color: #7c3aed;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  border-color: var(--primary, #7c3aed);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .form-input.disabled {
@@ -372,19 +395,20 @@ async function confirmDelete() {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: #18181c;
+  background: var(--bg-surface-elevated, #181820);
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 8px;
 }
 
 .check-title {
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #f1f1f8;
+  color: var(--text-main, #f4f4f7);
 }
 
 .check-subtitle {
   font-size: 0.8125rem;
-  color: #71718a;
+  color: var(--text-muted, #9494a8);
 }
 
 /* Toggle Switch */
@@ -435,8 +459,8 @@ input:checked + .toggle-slider:before {
 
 .auth-subform {
   padding: 1rem;
-  background: #18181c;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface-elevated, #181820);
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 8px;
   margin-top: 0.5rem;
 }
