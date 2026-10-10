@@ -329,6 +329,7 @@ async def update_endpoint(
     if body.request_params is not None:
         for p in ep.request_params:
             await db.delete(p)
+        await db.flush()
         for p in body.request_params:
             db.add(
                 ApiRequestParam(
@@ -345,6 +346,7 @@ async def update_endpoint(
     if body.request_body is not None:
         if ep.request_body:
             await db.delete(ep.request_body)
+            await db.flush()
         db.add(
             ApiRequestBody(
                 endpoint_id=ep.id,
@@ -357,10 +359,12 @@ async def update_endpoint(
     if body.response_headers is not None:
         for h in ep.response_headers:
             await db.delete(h)
+        await db.flush()
         for h in body.response_headers:
             db.add(ApiResponseHeader(endpoint_id=ep.id, name=h.name, value=h.value))
 
     await db.flush()
+
 
     full_query = (
         select(ApiEndpoint)
