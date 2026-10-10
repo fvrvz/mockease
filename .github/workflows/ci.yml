@@ -118,9 +118,9 @@ jobs:
         working-directory: frontend
         run: npm run type-check
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests with Coverage
         working-directory: frontend
-        run: npm run test:unit -- --run
+        run: npm run test:unit -- --coverage --run
 
       - name: Production Build Check
         working-directory: frontend

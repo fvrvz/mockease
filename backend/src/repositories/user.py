@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +20,12 @@ class UserRepository:
         result = await self.session.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
 
-    async def get_by_id(self, user_id: str) -> User | None:
+    async def get_by_id(self, user_id: str | uuid.UUID) -> User | None:
+        if isinstance(user_id, str):
+            try:
+                user_id = uuid.UUID(user_id)
+            except ValueError:
+                return None
         result = await self.session.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
