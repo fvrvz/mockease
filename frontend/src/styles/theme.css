@@ -1,5 +1,10 @@
-:root {
-  /* Color Palette — Deep Slate Dark Theme */
+/* =====================================================================
+   MockEase Design System — Dynamic Theming & Palette System
+   ===================================================================== */
+
+:root,
+[data-theme="dark"] {
+  /* Default Dark (Midnight Violet) */
   --bg-app: #09090b;
   --bg-surface: #121217;
   --bg-surface-elevated: #181820;
@@ -42,6 +47,174 @@
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ──────────────── Dark Palette Variations ──────────────── */
+
+/* Cyber Emerald */
+[data-theme="dark"][data-palette="emerald"] {
+  --bg-app: #080f0c;
+  --bg-surface: #0f1814;
+  --bg-surface-elevated: #15221c;
+  --bg-surface-hover: #1c2e26;
+  --border-subtle: #1a2e25;
+  --border-strong: #254437;
+  --border-focus: #10b981;
+
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.25);
+  --accent-indigo: #14b8a6;
+}
+
+/* Ocean Sapphire */
+[data-theme="dark"][data-palette="sapphire"] {
+  --bg-app: #070d18;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #17233d;
+  --bg-surface-hover: #1e2f52;
+  --border-subtle: #1e293b;
+  --border-strong: #334155;
+  --border-focus: #3b82f6;
+
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-glow: rgba(59, 130, 246, 0.25);
+  --accent-indigo: #0ea5e9;
+}
+
+/* Sunset Amber */
+[data-theme="dark"][data-palette="amber"] {
+  --bg-app: #140d08;
+  --bg-surface: #1c140d;
+  --bg-surface-elevated: #281d13;
+  --bg-surface-hover: #36271a;
+  --border-subtle: #36271a;
+  --border-strong: #523a26;
+  --border-focus: #f59e0b;
+
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-glow: rgba(245, 158, 11, 0.25);
+  --accent-indigo: #f97316;
+}
+
+/* Pure Onyx */
+[data-theme="dark"][data-palette="onyx"] {
+  --bg-app: #000000;
+  --bg-surface: #0f0f11;
+  --bg-surface-elevated: #18181b;
+  --bg-surface-hover: #27272a;
+  --border-subtle: #27272a;
+  --border-strong: #3f3f46;
+  --border-focus: #e4e4e7;
+
+  --primary: #e4e4e7;
+  --primary-hover: #ffffff;
+  --primary-glow: rgba(228, 228, 231, 0.25);
+  --accent-indigo: #a1a1aa;
+}
+
+/* ──────────────── Light Theme (Default: Clean Iris) ──────────────── */
+
+[data-theme="light"],
+[data-theme="light"][data-palette="iris"] {
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-hover: #e2e8f0;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #6366f1;
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.2);
+  --accent-indigo: #818cf8;
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.1);
+  --success-border: rgba(22, 163, 74, 0.25);
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --danger-border: rgba(220, 38, 38, 0.25);
+
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.1);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
+}
+
+/* Nordic Frost */
+[data-theme="light"][data-palette="frost"] {
+  --bg-app: #f0f9ff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #e0f2fe;
+  --bg-surface-hover: #bae6fd;
+  --border-subtle: #bae6fd;
+  --border-strong: #7dd3fc;
+  --border-focus: #0284c7;
+
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-glow: rgba(2, 132, 199, 0.2);
+  --accent-indigo: #0ea5e9;
+}
+
+/* Sage Mist */
+[data-theme="light"][data-palette="sage"] {
+  --bg-app: #f4f7f4;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ecfdf5;
+  --bg-surface-hover: #d1fae5;
+  --border-subtle: #d1fae5;
+  --border-strong: #a7f3d0;
+  --border-focus: #059669;
+
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-glow: rgba(5, 150, 105, 0.2);
+  --accent-indigo: #10b981;
+}
+
+/* Rose Pearl */
+[data-theme="light"][data-palette="rose"] {
+  --bg-app: #fff1f2;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffe4e6;
+  --bg-surface-hover: #fecdd3;
+  --border-subtle: #fecdd3;
+  --border-strong: #fda4af;
+  --border-focus: #e11d48;
+
+  --primary: #e11d48;
+  --primary-hover: #be123c;
+  --primary-glow: rgba(225, 29, 72, 0.2);
+  --accent-indigo: #f43f5e;
+}
+
+/* Warm Sandstone */
+[data-theme="light"][data-palette="sandstone"] {
+  --bg-app: #fafaf9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f5f5f4;
+  --bg-surface-hover: #e7e5e4;
+  --border-subtle: #e7e5e4;
+  --border-strong: #d6d3d1;
+  --border-focus: #d97706;
+
+  --primary: #d97706;
+  --primary-hover: #b45309;
+  --primary-glow: rgba(217, 119, 6, 0.2);
+  --accent-indigo: #ea580c;
+}
+
 /* Global Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -63,6 +236,6 @@
 
 /* Selection */
 ::selection {
-  background: rgba(124, 58, 237, 0.35);
-  color: #ffffff;
+  background: var(--primary-glow);
+  color: var(--primary);
 }

@@ -39,6 +39,12 @@ const router = createRouter({
           component: () => import('@/views/Application/ApplicationSettings.vue'),
           meta: { title: 'Application Settings' },
         },
+        {
+          path: 'settings',
+          name: 'settings',
+          component: () => import('@/views/Settings/SettingsView.vue'),
+          meta: { title: 'Settings & Appearance' },
+        },
       ],
     },
     {

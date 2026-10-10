@@ -101,7 +101,7 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 20%, rgba(124, 58, 237, 0.08) 0%, rgba(9, 9, 11, 1) 70%);
+  background: radial-gradient(circle at 50% 20%, var(--primary-glow, rgba(124, 58, 237, 0.08)) 0%, var(--bg-app, #09090b) 70%);
   padding: 1.5rem;
 }
 
@@ -112,7 +112,7 @@ async function handleLogin() {
   border: 1px solid var(--border-subtle, #22222e);
   border-radius: 16px;
   padding: 2.25rem;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-card__header {
@@ -130,7 +130,7 @@ async function handleLogin() {
 .auth-title {
   font-size: 1.625rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f4f4f7 0%, #c4b5fd 100%);
+  background: linear-gradient(135deg, var(--text-main, #f4f4f7) 0%, var(--primary, #7c3aed) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0 0 0.25rem;
@@ -158,18 +158,18 @@ async function handleLogin() {
 .form-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #9999b3;
+  color: var(--text-muted, #9494a8);
 }
 
 .form-input {
   padding: 0.625rem 0.875rem;
-  background: #0f0f11;
-  border: 1px solid #2a2a35;
+  background: var(--bg-surface-elevated, #181820);
+  border: 1px solid var(--border-subtle, #22222e);
   border-radius: 8px;
-  color: #e8e8f0;
+  color: var(--text-main, #e8e8f0);
   font-size: 0.9375rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast, 0.15s ease);
 }
 
 .form-input:focus {
