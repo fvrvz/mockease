@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import AppLogo from '@/components/AppLogo.vue'
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -22,6 +23,28 @@ function logout() {
         </RouterLink>
       </div>
       <div class="app-header__actions">
+        <!-- Compact Quick Theme Switcher -->
+        <ThemeSwitcher :compact="true" />
+
+        <!-- Settings Link -->
+        <RouterLink to="/settings" class="settings-link" title="Appearance & Settings">
+          <svg
+            class="settings-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+            />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span class="settings-text">Settings</span>
+        </RouterLink>
+
         <div class="user-pill">
           <span class="user-avatar">{{ authStore.user?.username?.[0]?.toUpperCase() || 'U' }}</span>
           <span class="user-name">{{ authStore.user?.username }}</span>
@@ -78,7 +101,33 @@ function logout() {
 .app-header__actions {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
+}
+
+.settings-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  color: var(--text-muted, #9494a8);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.settings-link:hover,
+.settings-link.router-link-active {
+  color: var(--text-main, #f4f4f7);
+  background: var(--bg-surface-elevated, #181820);
+  border-color: var(--border-subtle, #22222e);
+}
+
+.settings-icon {
+  width: 15px;
+  height: 15px;
 }
 
 .user-pill {

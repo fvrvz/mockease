@@ -56,4 +56,39 @@ test.describe('MockEase Frontend Functional UI Tests', () => {
     const homeBtn = page.locator('a:has-text("Go to Dashboard")')
     await expect(homeBtn).toBeVisible()
   })
+
+  test('Theme switcher toggles light/dark/system mode and applies palette presets in Settings', async ({ page }) => {
+    // Navigate to Settings
+    await page.goto('/settings')
+
+    // Expect settings view to load
+    await expect(page.locator('.settings-title')).toContainText('Appearance & Preferences')
+
+    // 1. Toggle Light Mode
+    const lightBtn = page.locator('button[title="Light mode"]').first()
+    await lightBtn.click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+
+    // 2. Select Light Palette (e.g. Nordic Frost)
+    const frostPalette = page.locator('.palette-card:has-text("Nordic Frost")')
+    await frostPalette.click()
+    await expect(page.locator('html')).toHaveAttribute('data-palette', 'frost')
+
+    // 3. Toggle Dark Mode
+    const darkBtn = page.locator('button[title="Dark mode"]').first()
+    await darkBtn.click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+    // 4. Select Dark Palette (e.g. Cyber Emerald)
+    const emeraldPalette = page.locator('.palette-card:has-text("Cyber Emerald")')
+    await emeraldPalette.click()
+    await expect(page.locator('html')).toHaveAttribute('data-palette', 'emerald')
+
+    // 5. Toggle System Mode
+    const systemBtn = page.locator('button[title="Follow system appearance"]').first()
+    await systemBtn.click()
+    const htmlTheme = await page.locator('html').getAttribute('data-theme')
+    expect(htmlTheme === 'dark' || htmlTheme === 'light').toBe(true)
+  })
 })
+

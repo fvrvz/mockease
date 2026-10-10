@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #0f0f11;
+  background: var(--bg-app, #09090b);
 }
 
 .not-found__content {
@@ -26,18 +26,18 @@
   display: block;
   font-size: 6rem;
   font-weight: 800;
-  color: #2a2a35;
+  color: var(--border-strong, #323242);
   line-height: 1;
 }
 
 .not-found__title {
   font-size: 1.5rem;
-  color: #e8e8f0;
+  color: var(--text-main, #f4f4f7);
   margin: 0.5rem 0;
 }
 
 .not-found__desc {
-  color: #6666a0;
+  color: var(--text-muted, #9494a8);
   margin-bottom: 1.5rem;
 }
 
@@ -50,15 +50,15 @@
   cursor: pointer;
   border: none;
   text-decoration: none;
-  transition: all 0.15s;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .btn--primary {
-  background: #7c3aed;
+  background: var(--primary, #7c3aed);
   color: #fff;
 }
 
 .btn--primary:hover {
-  background: #6d28d9;
+  background: var(--primary-hover, #6d28d9);
 }
 </style>
