@@ -26,11 +26,14 @@ def compile_jsonb_sqlite(type_, compiler, **kw):  # type: ignore[no-untyped-def]
 def compile_uuid_sqlite(type_, compiler, **kw):  # type: ignore[no-untyped-def]
     return "CHAR(36)"
 
-# In-memory SQLite async engine for tests
+from sqlalchemy.pool import StaticPool
+
+# In-memory SQLite async engine for tests with StaticPool
 test_engine = create_async_engine(
     "sqlite+aiosqlite:///:memory:",
     echo=False,
     connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 
 TestSessionLocal = async_sessionmaker(
@@ -50,6 +53,7 @@ async def setup_database() -> AsyncGenerator[None, None]:
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    await test_engine.dispose()
 
 
 @pytest.fixture(autouse=True)

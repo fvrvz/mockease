@@ -80,6 +80,15 @@ async def test_controllers_and_endpoints_lifecycle(client: AsyncClient, auth_hea
                 "default_val": "10",
             }
         ],
+        "request_body": {
+            "body_type": "json",
+            "required": False,
+            "schema_def": {"type": "object"},
+        },
+        "auth_config": {
+            "auth_type": "bearer",
+            "bearer_token": "ep-token",
+        },
         "response_headers": [
             {"name": "X-Custom-Header", "value": "MockEase-Test"}
         ],
@@ -94,6 +103,7 @@ async def test_controllers_and_endpoints_lifecycle(client: AsyncClient, auth_hea
     assert ep_data["name"] == "List Products"
     assert ep_data["method"] == "GET"
     assert ep_data["path"] == "/products"
+    assert ep_data["auth_config"]["auth_type"] == "bearer"
     ep_id = ep_data["id"]
 
     # 8. List Endpoints for Controller
@@ -106,19 +116,45 @@ async def test_controllers_and_endpoints_lifecycle(client: AsyncClient, auth_hea
     assert get_ep.status_code == 200
     assert get_ep.json()["name"] == "List Products"
 
-    # 10. Update Endpoint
+    # 10. Update Endpoint (including headers, params, body, auth_config)
     update_ep = await client.patch(
         f"/api/v1/endpoints/{ep_id}",
         json={
             "name": "List Products (Updated)",
+            "description": "Updated desc",
             "response_status": 201,
             "auth_inherit": "override_off",
+            "auth_config": {
+                "auth_type": "api_key",
+                "api_key_header": "X-EP-Key",
+                "api_key_value": "secret",
+            },
+            "request_params": [
+                {
+                    "param_type": "header",
+                    "name": "x-trace",
+                    "value_type": "string",
+                    "required": True,
+                }
+            ],
+            "request_body": {
+                "body_type": "json",
+                "required": True,
+                "schema_def": {"type": "string"},
+            },
+            "response_headers": [
+                {"name": "X-Updated", "value": "true"}
+            ],
         },
         headers=auth_headers,
     )
     assert update_ep.status_code == 200
     assert update_ep.json()["name"] == "List Products (Updated)"
     assert update_ep.json()["response_status"] == 201
+    assert update_ep.json()["auth_config"]["auth_type"] == "api_key"
+    assert len(update_ep.json()["request_params"]) == 1
+    assert len(update_ep.json()["response_headers"]) == 1
+
 
     # 11. Toggle Endpoint
     toggle_ep = await client.patch(f"/api/v1/endpoints/{ep_id}/toggle", headers=auth_headers)
@@ -132,3 +168,25 @@ async def test_controllers_and_endpoints_lifecycle(client: AsyncClient, auth_hea
     # 13. Delete Controller
     del_ctrl = await client.delete(f"/api/v1/controllers/{ctrl_id}", headers=auth_headers)
     assert del_ctrl.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_controllers_and_endpoints_errors(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+    non_existent = "00000000-0000-0000-0000-000000000000"
+
+    # Controller 404s
+    assert (await client.get(f"/api/v1/applications/{non_existent}/controllers", headers=auth_headers)).status_code == 404
+    assert (await client.post(f"/api/v1/applications/{non_existent}/controllers", json={"name": "X"}, headers=auth_headers)).status_code == 404
+    assert (await client.get(f"/api/v1/controllers/{non_existent}", headers=auth_headers)).status_code == 404
+    assert (await client.patch(f"/api/v1/controllers/{non_existent}", json={"name": "X"}, headers=auth_headers)).status_code == 404
+    assert (await client.patch(f"/api/v1/controllers/{non_existent}/toggle", headers=auth_headers)).status_code == 404
+    assert (await client.delete(f"/api/v1/controllers/{non_existent}", headers=auth_headers)).status_code == 404
+
+    # Endpoint 404s
+    assert (await client.get(f"/api/v1/controllers/{non_existent}/endpoints", headers=auth_headers)).status_code == 404
+    assert (await client.post(f"/api/v1/controllers/{non_existent}/endpoints", json={"name": "X", "method": "GET", "path": "/x"}, headers=auth_headers)).status_code == 404
+    assert (await client.get(f"/api/v1/endpoints/{non_existent}", headers=auth_headers)).status_code == 404
+    assert (await client.patch(f"/api/v1/endpoints/{non_existent}", json={"name": "X"}, headers=auth_headers)).status_code == 404
+    assert (await client.patch(f"/api/v1/endpoints/{non_existent}/toggle", headers=auth_headers)).status_code == 404
+    assert (await client.delete(f"/api/v1/endpoints/{non_existent}", headers=auth_headers)).status_code == 404
+

@@ -144,3 +144,75 @@ async def test_mock_runtime_not_found_and_disabled(client: AsyncClient, auth_hea
 
     disabled_res = await client.get(f"/mock/{app_slug}/anything")
     assert disabled_res.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_mock_runtime_text_and_empty_responses(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+    app_res = await client.post("/api/v1/applications", json={"name": "Text App"}, headers=auth_headers)
+    app_id = app_res.json()["id"]
+    app_slug = app_res.json()["slug"]
+
+    ctrl_res = await client.post(f"/api/v1/applications/{app_id}/controllers", json={"name": "Ctrl"}, headers=auth_headers)
+    ctrl_id = ctrl_res.json()["id"]
+
+    # Text endpoint
+    await client.post(
+        f"/api/v1/controllers/{ctrl_id}/endpoints",
+        json={
+            "name": "Text EP",
+            "method": "GET",
+            "path": "/raw-text",
+            "response_status": 200,
+            "response_body_type": "text",
+            "response_body": "Hello {{request.query.name}}!",
+        },
+        headers=auth_headers,
+    )
+
+    # Empty endpoint
+    await client.post(
+        f"/api/v1/controllers/{ctrl_id}/endpoints",
+        json={
+            "name": "Empty EP",
+            "method": "DELETE",
+            "path": "/empty",
+            "response_status": 204,
+            "response_body_type": "empty",
+        },
+        headers=auth_headers,
+    )
+
+    # Required query param endpoint
+    await client.post(
+        f"/api/v1/controllers/{ctrl_id}/endpoints",
+        json={
+            "name": "Param EP",
+            "method": "GET",
+            "path": "/check-param",
+            "response_status": 200,
+            "request_params": [
+                {
+                    "param_type": "query",
+                    "name": "code",
+                    "value_type": "string",
+                    "required": True,
+                }
+            ],
+        },
+        headers=auth_headers,
+    )
+
+    # Call text endpoint
+    text_res = await client.get(f"/mock/{app_slug}/raw-text?name=World")
+    assert text_res.status_code == 200
+    assert "Hello World!" in text_res.text
+
+    # Call empty endpoint
+    empty_res = await client.delete(f"/mock/{app_slug}/empty")
+    assert empty_res.status_code == 204
+    assert empty_res.text == ""
+
+    # Call param endpoint missing param -> 400
+    missing_param_res = await client.get(f"/mock/{app_slug}/check-param")
+    assert missing_param_res.status_code == 400
+

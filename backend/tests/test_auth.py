@@ -4,6 +4,8 @@ import pytest
 from httpx import AsyncClient
 
 from src.models.user import User
+from src.services.auth_service import hash_password, create_access_token
+
 
 
 @pytest.mark.asyncio
@@ -94,3 +96,40 @@ async def test_get_me_authenticated(client: AsyncClient, test_user: User, auth_h
 async def test_get_me_unauthorized(client: AsyncClient) -> None:
     response = await client.get("/api/v1/auth/me")
     assert response.status_code == 403 or response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_account_disabled(client: AsyncClient, db_session) -> None:  # type: ignore[no-untyped-def]
+    disabled_user = User(
+        email="disabled@mockease.dev",
+        username="disableduser",
+        password_hash=hash_password("password123"),
+        is_active=False,
+    )
+    db_session.add(disabled_user)
+    await db_session.commit()
+
+    res = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "disabled@mockease.dev", "password": "password123"},
+    )
+    assert res.status_code == 403
+    assert "disabled" in res.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_get_me_invalid_tokens(client: AsyncClient) -> None:
+    # Invalid JWT signature/format
+    res = await client.get("/api/v1/auth/me", headers={"Authorization": "Bearer bad-token"})
+    assert res.status_code == 401
+
+    # Token with missing subject claim
+    bad_payload_token = create_access_token({})
+    res2 = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {bad_payload_token}"})
+    assert res2.status_code == 401
+
+    # Token with non-existent user ID
+    ghost_token = create_access_token({"sub": "00000000-0000-0000-0000-000000000000"})
+    res3 = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {ghost_token}"})
+    assert res3.status_code == 401
+
