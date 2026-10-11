@@ -92,10 +92,11 @@ function logout() {
 .brand-name {
   font-size: 1.1875rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f4f4f7 0%, #c4b5fd 100%);
+  background: linear-gradient(135deg, var(--text-main, #f4f4f7) 0%, var(--primary, #7c3aed) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.025em;
+  transition: background var(--transition-normal, 0.25s ease);
 }
 
 .app-header__actions {
