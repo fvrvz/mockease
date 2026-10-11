@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import {
+  Zap,
+  Code2,
+  Send,
+  Plus,
+  Trash2,
+  Sparkles,
+  Clock,
+  HardDrive,
+  Copy,
+  Check,
+  AlertCircle,
+  Rocket,
+} from '@lucide/vue'
+import { formatJsonWithMacros, validateJsonWithMacros } from '@/utils/jsonMacroHelper'
 import type { ApiEndpoint, HttpMethod } from '@/types/endpoint'
 
 interface KeyValuePair {
@@ -49,14 +64,12 @@ const extractedParamNames = computed(() => {
 watch(
   () => props.endpoint,
   (ep) => {
-    // Reset path variables
     const vars: Record<string, string> = {}
     for (const name of extractedParamNames.value) {
       vars[name] = ''
     }
     pathVariables.value = vars
 
-    // Reset query params from endpoint's request_params if present
     queryParams.value = []
     if (ep.request_params) {
       for (const p of ep.request_params) {
@@ -71,7 +84,6 @@ watch(
       }
     }
 
-    // Default headers
     requestHeaders.value = [
       {
         id: 'h-accept',
@@ -127,12 +139,12 @@ function removeHeader(index: number) {
 
 function formatRequestBody() {
   if (!requestBody.value.trim()) return
-  try {
-    const parsed = JSON.parse(requestBody.value)
-    requestBody.value = JSON.stringify(parsed, null, 2)
+  const res = formatJsonWithMacros(requestBody.value)
+  if (res.error) {
+    requestBodyError.value = res.error
+  } else {
+    requestBody.value = res.formatted
     requestBodyError.value = null
-  } catch (err: unknown) {
-    requestBodyError.value = err instanceof Error ? err.message : 'Invalid JSON format'
   }
 }
 
@@ -167,16 +179,15 @@ async function executeRequest() {
   isSending.value = true
   responseData.value = null
 
-  // Validate body if present
+  // Validate body if present with macros support
   if (['POST', 'PUT', 'PATCH'].includes(props.endpoint.method) && requestBody.value.trim()) {
-    try {
-      JSON.parse(requestBody.value)
-      requestBodyError.value = null
-    } catch (err: unknown) {
-      requestBodyError.value = err instanceof Error ? err.message : 'Invalid JSON syntax'
+    const err = validateJsonWithMacros(requestBody.value)
+    if (err) {
+      requestBodyError.value = err
       isSending.value = false
       return
     }
+    requestBodyError.value = null
   }
 
   const headersObj: Record<string, string> = {}
@@ -256,7 +267,6 @@ const generatedSnippets = computed(() => {
     curl += ` \\\n  -H "${h.key.trim()}: ${h.value}"`
   }
   if (hasBody) {
-    // Escape single quotes for shell safety
     const escaped = requestBody.value.replace(/'/g, "'\\''")
     curl += ` \\\n  -d '${escaped}'`
   }
@@ -298,7 +308,7 @@ const generatedSnippets = computed(() => {
     axiosSnippet += `);\n\nconsole.log(response.data);`
   }
 
-  // 4. Python (requests & httpx)
+  // 4. Python
   let pySnippet = `import requests\n\n`
   pySnippet += `url = "${url}"\n`
   if (Object.keys(fetchHeaders).length > 0) {
@@ -366,7 +376,8 @@ function formatBytes(bytes: number): string {
           :class="{ 'nav-tab--active': activeSubTab === 'tester' }"
           @click="activeSubTab = 'tester'"
         >
-          ⚡ Live Request Runner
+          <Zap :size="14" class="tab-icon" />
+          <span>Live Request Runner</span>
         </button>
         <button
           type="button"
@@ -374,12 +385,14 @@ function formatBytes(bytes: number): string {
           :class="{ 'nav-tab--active': activeSubTab === 'snippets' }"
           @click="activeSubTab = 'snippets'"
         >
-          💻 1-Click Code Snippets
+          <Code2 :size="14" class="tab-icon" />
+          <span>1-Click Code Snippets</span>
         </button>
       </div>
 
       <div v-if="copyFeedback" class="copy-alert">
-        {{ copyFeedback }}
+        <Check :size="13" class="alert-icon" />
+        <span>{{ copyFeedback }}</span>
       </div>
     </div>
 
@@ -406,7 +419,8 @@ function formatBytes(bytes: number): string {
           :disabled="isSending"
           @click="executeRequest"
         >
-          {{ isSending ? 'Sending…' : 'Send Request' }}
+          <Send :size="13" class="btn-icon" />
+          <span>{{ isSending ? 'Sending…' : 'Send Request' }}</span>
         </button>
       </div>
 
@@ -427,7 +441,7 @@ function formatBytes(bytes: number): string {
               v-model="pathVariables[name]"
               type="text"
               class="form-input var-input"
-              :placeholder="`e.g. 123`"
+              placeholder="e.g. 123"
             />
           </div>
         </div>
@@ -438,7 +452,8 @@ function formatBytes(bytes: number): string {
         <div class="param-box__header">
           <span class="box-title">Query Parameters</span>
           <button type="button" class="btn btn--ghost btn--xs" @click="addQueryParam">
-            + Add Query Param
+            <Plus :size="12" class="btn-icon" />
+            <span>Add Query Param</span>
           </button>
         </div>
 
@@ -467,7 +482,7 @@ function formatBytes(bytes: number): string {
               title="Remove parameter"
               @click="removeQueryParam(idx)"
             >
-              ×
+              <Trash2 :size="14" />
             </button>
           </div>
         </div>
@@ -478,7 +493,8 @@ function formatBytes(bytes: number): string {
         <div class="param-box__header">
           <span class="box-title">Request Headers</span>
           <button type="button" class="btn btn--ghost btn--xs" @click="addHeader">
-            + Add Header
+            <Plus :size="12" class="btn-icon" />
+            <span>Add Header</span>
           </button>
         </div>
 
@@ -503,7 +519,7 @@ function formatBytes(bytes: number): string {
               title="Remove header"
               @click="removeHeader(idx)"
             >
-              ×
+              <Trash2 :size="14" />
             </button>
           </div>
         </div>
@@ -518,7 +534,8 @@ function formatBytes(bytes: number): string {
             class="btn btn--ghost btn--xs"
             @click="formatRequestBody"
           >
-            Format JSON
+            <Sparkles :size="12" class="btn-icon" />
+            <span>Format JSON</span>
           </button>
         </div>
 
@@ -531,7 +548,8 @@ function formatBytes(bytes: number): string {
         ></textarea>
 
         <div v-if="requestBodyError" class="error-banner">
-          ⚠️ {{ requestBodyError }}
+          <AlertCircle :size="14" class="alert-icon" />
+          <span>{{ requestBodyError }}</span>
         </div>
       </div>
 
@@ -551,8 +569,14 @@ function formatBytes(bytes: number): string {
               >
                 {{ responseData.status }} {{ responseData.statusText }}
               </span>
-              <span class="meta-pill">⚡ {{ responseData.timeMs }} ms</span>
-              <span class="meta-pill">📦 {{ formatBytes(responseData.sizeBytes) }}</span>
+              <span class="meta-pill">
+                <Clock :size="12" class="meta-icon" />
+                <span>{{ responseData.timeMs }} ms</span>
+              </span>
+              <span class="meta-pill">
+                <HardDrive :size="12" class="meta-icon" />
+                <span>{{ formatBytes(responseData.sizeBytes) }}</span>
+              </span>
             </template>
           </div>
 
@@ -580,14 +604,15 @@ function formatBytes(bytes: number): string {
               class="btn btn--outline btn--xs"
               @click="copyCode(JSON.stringify(responseData.body, null, 2))"
             >
-              Copy Body
+              <Copy :size="12" class="btn-icon" />
+              <span>Copy Body</span>
             </button>
           </div>
         </div>
 
         <!-- Waiting State -->
         <div v-if="!responseData && !isSending" class="res-placeholder">
-          <span class="placeholder-icon">🚀</span>
+          <Rocket :size="28" class="placeholder-icon-svg" />
           <p class="placeholder-text">Click <strong>Send Request</strong> above to trigger this mock endpoint live.</p>
         </div>
 
@@ -668,7 +693,8 @@ function formatBytes(bytes: number): string {
           class="btn btn--outline btn--sm btn-copy-snip"
           @click="copyCode(generatedSnippets[snippetLanguage])"
         >
-          📋 Copy Code
+          <Copy :size="13" class="btn-icon" />
+          <span>Copy Code</span>
         </button>
       </div>
 
@@ -705,6 +731,9 @@ function formatBytes(bytes: number): string {
 }
 
 .nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted, #9494a8);
@@ -727,11 +756,24 @@ function formatBytes(bytes: number): string {
   color: var(--primary, #7c3aed);
 }
 
+.tab-icon,
+.btn-icon,
+.meta-icon {
+  flex-shrink: 0;
+}
+
 .copy-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.8125rem;
   color: var(--success, #10b981);
   font-weight: 600;
   animation: fadeIn 0.2s ease-in;
+}
+
+.alert-icon {
+  flex-shrink: 0;
 }
 
 /* Tester */
@@ -862,17 +904,21 @@ function formatBytes(bytes: number): string {
 }
 
 .btn-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--text-dim, #606075);
-  font-size: 1.25rem;
   cursor: pointer;
-  padding: 0 0.4rem;
-  line-height: 1;
+  padding: 0.35rem;
+  border-radius: 4px;
+  transition: all var(--transition-fast, 0.15s);
 }
 
 .btn-del:hover {
   color: var(--danger, #ef4444);
+  background: var(--danger-bg, rgba(239, 68, 68, 0.1));
 }
 
 .empty-hint {
@@ -889,6 +935,9 @@ function formatBytes(bytes: number): string {
 }
 
 .error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   margin-top: 0.5rem;
   font-size: 0.8125rem;
   color: var(--danger, #ef4444);
@@ -955,6 +1004,9 @@ function formatBytes(bytes: number): string {
 }
 
 .meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.75rem;
   color: var(--text-muted, #9494a8);
 }
@@ -1000,8 +1052,9 @@ function formatBytes(bytes: number): string {
   gap: 0.5rem;
 }
 
-.placeholder-icon {
-  font-size: 1.75rem;
+.placeholder-icon-svg {
+  color: var(--text-muted, #9494a8);
+  margin-bottom: 0.25rem;
 }
 
 .placeholder-text {
@@ -1158,6 +1211,7 @@ function formatBytes(bytes: number): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.375rem;
   padding: 0.4rem 0.85rem;
   border-radius: 6px;
   font-size: 0.8125rem;

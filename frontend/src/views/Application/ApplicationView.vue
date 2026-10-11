@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import {
+  Settings,
+  Play,
+  Sliders,
+  Terminal,
+  Sparkles,
+  AlertCircle,
+  ArrowLeft,
+  Plus,
+  Copy,
+  Save,
+} from '@lucide/vue'
 import { applicationService } from '@/services/applications'
 import { controllerService } from '@/services/controllers'
 import { endpointService } from '@/services/endpoints'
 import EndpointPlayground from '@/components/EndpointPlayground.vue'
+import { validateJsonWithMacros, formatJsonWithMacros } from '@/utils/jsonMacroHelper'
 import type { Application } from '@/types/application'
 import type { Controller } from '@/types/controller'
 import type { ApiEndpoint, HttpMethod } from '@/types/endpoint'
@@ -49,18 +62,7 @@ const bodyText = ref('')
 const jsonError = ref<string | null>(null)
 
 function validateBodyText(text: string) {
-  if (!text.trim()) {
-    jsonError.value = null
-    return
-  }
-  // Mask {{...}} placeholders with valid JSON string values so mock macros don't cause false positives
-  const masked = text.replace(/\{\{[^{}]+\}\}/g, '"__MACRO__"')
-  try {
-    JSON.parse(masked)
-    jsonError.value = null
-  } catch (err: unknown) {
-    jsonError.value = err instanceof Error ? err.message : 'Invalid JSON syntax'
-  }
+  jsonError.value = validateJsonWithMacros(text)
 }
 
 function handleBodyInput(e: Event) {
@@ -82,31 +84,12 @@ function handleTabKey(e: KeyboardEvent) {
 
 function beautifyJson() {
   if (!bodyText.value.trim()) return
-  try {
-    const parsed = JSON.parse(bodyText.value)
-    bodyText.value = JSON.stringify(parsed, null, 2)
+  const res = formatJsonWithMacros(bodyText.value)
+  if (res.error) {
+    jsonError.value = res.error
+  } else {
+    bodyText.value = res.formatted
     jsonError.value = null
-    return
-  } catch {
-    const macroRegex = /\{\{[^{}]+\}\}/g
-    const macros: string[] = []
-    const placeholderPattern = (idx: number) => `"___MACRO_HOLDER_${idx}___"`
-
-    const temp = bodyText.value.replace(macroRegex, (match) => {
-      macros.push(match)
-      return placeholderPattern(macros.length - 1)
-    })
-
-    try {
-      let formatted = JSON.stringify(JSON.parse(temp), null, 2)
-      macros.forEach((macro, idx) => {
-        formatted = formatted.replace(placeholderPattern(idx), macro)
-      })
-      bodyText.value = formatted
-      jsonError.value = null
-    } catch (err: unknown) {
-      jsonError.value = err instanceof Error ? err.message : 'Cannot beautify invalid JSON'
-    }
   }
 }
 
@@ -269,7 +252,10 @@ async function copyToClipboard(text: string, label: string) {
     <!-- Workspace Top Bar -->
     <div class="workspace__topbar">
       <div class="topbar-left">
-        <RouterLink to="/" class="back-link">← Applications</RouterLink>
+        <RouterLink to="/" class="back-link">
+          <ArrowLeft :size="14" class="btn-icon" />
+          <span>Applications</span>
+        </RouterLink>
         <h1 class="workspace-title">{{ app.name }}</h1>
         <span class="base-badge">/mock/{{ app.slug }}</span>
       </div>
@@ -278,7 +264,8 @@ async function copyToClipboard(text: string, label: string) {
           class="btn btn--outline"
           @click="router.push({ name: 'application-settings', params: { id: app.id } })"
         >
-          ⚙ Settings
+          <Settings :size="14" class="btn-icon" />
+          <span>Settings</span>
         </button>
       </div>
     </div>
@@ -289,7 +276,9 @@ async function copyToClipboard(text: string, label: string) {
       <aside class="sidebar-col">
         <div class="col-header">
           <span class="col-title">Controllers</span>
-          <button class="btn btn--sm btn--primary" title="Add Controller" @click="showCreateCtrl = true">+</button>
+          <button class="btn btn--sm btn--primary" title="Add Controller" @click="showCreateCtrl = true">
+            <Plus :size="14" />
+          </button>
         </div>
 
         <div v-if="controllers.length === 0" class="col-empty">
@@ -316,7 +305,8 @@ async function copyToClipboard(text: string, label: string) {
             class="btn btn--sm btn--primary"
             @click="showCreateEndpoint = true"
           >
-            + New API
+            <Plus :size="14" class="btn-icon" />
+            <span>New API</span>
           </button>
         </div>
 
@@ -370,13 +360,16 @@ async function copyToClipboard(text: string, label: string) {
                 :class="activeTab === 'playground' ? 'btn--primary' : 'btn--outline'"
                 @click="activeTab = 'playground'"
               >
-                ⚡ Live Tester
+                <Play :size="13" class="btn-icon" />
+                <span>Live Tester</span>
               </button>
               <button class="btn btn--sm btn--outline" @click="copyToClipboard(mockUrl, 'Mock URL')">
-                Copy URL
+                <Copy :size="13" class="btn-icon" />
+                <span>Copy URL</span>
               </button>
               <button class="btn btn--sm btn--primary" @click="saveSelectedEndpoint">
-                Save
+                <Save :size="13" class="btn-icon" />
+                <span>Save</span>
               </button>
             </div>
           </div>
@@ -394,14 +387,16 @@ async function copyToClipboard(text: string, label: string) {
               :class="{ 'tab-btn--active': activeTab === 'editor' }"
               @click="activeTab = 'editor'"
             >
-              ⚙ Response Configuration
+              <Sliders :size="14" class="tab-icon" />
+              <span>Response Configuration</span>
             </button>
             <button
               class="tab-btn"
               :class="{ 'tab-btn--active': activeTab === 'playground' }"
               @click="activeTab = 'playground'"
             >
-              ⚡ Interactive Playground & Snippets
+              <Terminal :size="14" class="tab-icon" />
+              <span>Playground & Snippets</span>
             </button>
           </div>
 
@@ -451,7 +446,8 @@ async function copyToClipboard(text: string, label: string) {
                   class="btn btn--sm btn--outline beautify-btn"
                   @click="beautifyJson"
                 >
-                  ✨ Beautify JSON
+                  <Sparkles :size="13" class="btn-icon" />
+                  <span>Beautify JSON</span>
                 </button>
               </div>
 
@@ -470,7 +466,7 @@ async function copyToClipboard(text: string, label: string) {
               ></textarea>
 
               <div v-if="jsonError" class="json-error-banner">
-                <span class="error-icon">⚠️</span>
+                <AlertCircle :size="14" class="error-icon" />
                 <span class="error-text">JSON Syntax Error: {{ jsonError }}</span>
               </div>
             </div>
@@ -621,6 +617,9 @@ async function copyToClipboard(text: string, label: string) {
 }
 
 .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   color: var(--text-muted, #9494a8);
   text-decoration: none;
   font-size: 0.875rem;
@@ -800,6 +799,9 @@ async function copyToClipboard(text: string, label: string) {
 }
 
 .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -819,6 +821,10 @@ async function copyToClipboard(text: string, label: string) {
   color: var(--primary, #7c3aed);
   border-bottom-color: var(--primary, #7c3aed);
   font-weight: 600;
+}
+
+.tab-icon {
+  flex-shrink: 0;
 }
 
 .code-area {
@@ -888,7 +894,8 @@ async function copyToClipboard(text: string, label: string) {
 }
 
 .error-icon {
-  font-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--danger, #ef4444);
 }
 
 .error-text {
@@ -989,6 +996,10 @@ async function copyToClipboard(text: string, label: string) {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -998,8 +1009,12 @@ async function copyToClipboard(text: string, label: string) {
   transition: all var(--transition-fast, 0.15s);
 }
 
+.btn-icon {
+  flex-shrink: 0;
+}
+
 .btn--sm {
-  padding: 0.3rem 0.625rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.8125rem;
 }
 
