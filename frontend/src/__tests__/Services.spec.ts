@@ -73,7 +73,33 @@ describe('Services API Layer', () => {
       await applicationService.delete('app-1')
       expect(api.delete).toHaveBeenCalledWith('/applications/app-1')
     })
+
+    it('calls exportOpenApi, exportPostman, importOpenApi, and importIntoApplication', async () => {
+      vi.mocked(api.get)
+        .mockResolvedValueOnce({ data: { openapi: '3.0.3' } })
+        .mockResolvedValueOnce({ data: { info: { schema: 'postman' } } })
+      vi.mocked(api.post)
+        .mockResolvedValueOnce({ data: { id: 'app-imported' } })
+        .mockResolvedValueOnce({ data: { id: 'app-merged' } })
+
+      const openapiRes = await applicationService.exportOpenApi('app-1')
+      expect(api.get).toHaveBeenCalledWith('/applications/app-1/export/openapi')
+      expect(openapiRes).toEqual({ openapi: '3.0.3' })
+
+      const postmanRes = await applicationService.exportPostman('app-1')
+      expect(api.get).toHaveBeenCalledWith('/applications/app-1/export/postman')
+      expect(postmanRes).toEqual({ info: { schema: 'postman' } })
+
+      const importRes = await applicationService.importOpenApi({ spec: 'openapi: 3.0.0' })
+      expect(api.post).toHaveBeenCalledWith('/applications/import/openapi', { spec: 'openapi: 3.0.0' })
+      expect(importRes).toEqual({ id: 'app-imported' })
+
+      const mergeRes = await applicationService.importIntoApplication('app-1', { spec: 'openapi: 3.0.0' })
+      expect(api.post).toHaveBeenCalledWith('/applications/app-1/import/openapi', { spec: 'openapi: 3.0.0' })
+      expect(mergeRes).toEqual({ id: 'app-merged' })
+    })
   })
+
 
   describe('controllerService', () => {
     it('calls list, get, create, update, delete, toggle', async () => {

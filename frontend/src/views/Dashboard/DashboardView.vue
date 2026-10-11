@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Download } from '@lucide/vue'
 import { useApplicationStore } from '@/stores/applications'
+import { applicationService } from '@/services/applications'
 import AppLogo from '@/components/AppLogo.vue'
+import ImportSpecModal from '@/components/ImportSpecModal.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const router = useRouter()
 const appStore = useApplicationStore()
 
 const searchQuery = ref('')
 const showCreateModal = ref(false)
+const showImportModal = ref(false)
 const newAppName = ref('')
 const newAppDesc = ref('')
 const isCreating = ref(false)
@@ -52,7 +57,15 @@ async function handleCreate() {
   }
 }
 
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
+async function handleImport(data: { spec: string; name?: string }) {
+  const created = await applicationService.importOpenApi({
+    spec: data.spec,
+    name: data.name,
+  })
+  showImportModal.value = false
+  router.push({ name: 'application', params: { id: created.id } })
+}
+
 
 const showDeleteConfirm = ref(false)
 const appToDelete = ref<{ id: string; name: string } | null>(null)
@@ -90,9 +103,15 @@ async function confirmDelete() {
         <h1 class="dashboard__title">Applications</h1>
         <p class="dashboard__subtitle">Manage your mock API workspaces and endpoints</p>
       </div>
-      <button class="btn btn--primary" @click="showCreateModal = true">
-        + Create Application
-      </button>
+      <div class="dashboard__actions">
+        <button class="btn btn--outline" @click="showImportModal = true">
+          <Download :size="14" class="btn-icon" />
+          <span>Import Spec</span>
+        </button>
+        <button class="btn btn--primary" @click="showCreateModal = true">
+          + Create Application
+        </button>
+      </div>
     </div>
 
     <!-- Search Bar -->
@@ -114,10 +133,16 @@ async function confirmDelete() {
     <div v-else-if="appStore.applications.length === 0" class="dashboard__empty">
       <AppLogo :size="48" class="empty-logo" />
       <h2 class="empty-title">No applications yet</h2>
-      <p class="empty-desc">Create your first application to start designing and consuming mock APIs.</p>
-      <button class="btn btn--primary" @click="showCreateModal = true">
-        Create Application
-      </button>
+      <p class="empty-desc">Create your first application or import an existing OpenAPI / Postman spec to start designing mocks.</p>
+      <div class="empty-actions">
+        <button class="btn btn--primary" @click="showCreateModal = true">
+          Create Application
+        </button>
+        <button class="btn btn--outline" @click="showImportModal = true">
+          <Download :size="14" class="btn-icon" />
+          Import OpenAPI / Postman
+        </button>
+      </div>
     </div>
 
     <!-- Applications Grid / List -->
@@ -239,6 +264,13 @@ async function confirmDelete() {
       @confirm="confirmDelete"
       @cancel="showDeleteConfirm = false"
     />
+
+    <!-- Import Specification Modal -->
+    <ImportSpecModal
+      :show="showImportModal"
+      @close="showImportModal = false"
+      @imported="handleImport"
+    />
   </div>
 </template>
 
@@ -255,6 +287,23 @@ async function confirmDelete() {
   justify-content: space-between;
   margin-bottom: 1.5rem;
   gap: 1rem;
+}
+
+.dashboard__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.empty-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-icon {
+  margin-right: 0.35rem;
 }
 
 .dashboard__title {
