@@ -12,11 +12,16 @@ import {
   Plus,
   Copy,
   Save,
+  Download,
+  Upload,
+  ChevronDown,
+  FileCode,
 } from '@lucide/vue'
 import { applicationService } from '@/services/applications'
 import { controllerService } from '@/services/controllers'
 import { endpointService } from '@/services/endpoints'
 import EndpointPlayground from '@/components/EndpointPlayground.vue'
+import ImportSpecModal from '@/components/ImportSpecModal.vue'
 import { validateJsonWithMacros, formatJsonWithMacros } from '@/utils/jsonMacroHelper'
 import type { Application } from '@/types/application'
 import type { Controller } from '@/types/controller'
@@ -236,6 +241,67 @@ async function copyToClipboard(text: string, label: string) {
   await navigator.clipboard.writeText(text)
   showToast(`${label} copied to clipboard!`)
 }
+
+// Export & Import Specification logic
+const showExportMenu = ref(false)
+const isExporting = ref(false)
+const showImportModal = ref(false)
+
+function downloadJson(filename: string, data: Record<string, unknown>) {
+  const jsonStr = JSON.stringify(data, null, 2)
+  const blob = new Blob([jsonStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function handleExportOpenApi() {
+  if (!app.value) return
+  showExportMenu.value = false
+  isExporting.value = true
+  try {
+    const spec = await applicationService.exportOpenApi(app.value.id)
+    downloadJson(`${app.value.slug}-openapi.json`, spec)
+    showToast('OpenAPI 3.0 specification exported successfully!')
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { detail?: string } } }
+    showToast(e?.response?.data?.detail ?? 'Failed to export OpenAPI')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+async function handleExportPostman() {
+  if (!app.value) return
+  showExportMenu.value = false
+  isExporting.value = true
+  try {
+    const spec = await applicationService.exportPostman(app.value.id)
+    downloadJson(`${app.value.slug}-postman-collection.json`, spec)
+    showToast('Postman collection exported successfully!')
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { detail?: string } } }
+    showToast(e?.response?.data?.detail ?? 'Failed to export Postman collection')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+async function handleImportIntoApp(data: { spec: string }) {
+  if (!app.value) return
+  try {
+    await applicationService.importIntoApplication(app.value.id, { spec: data.spec })
+    showImportModal.value = false
+    await loadControllers()
+    showToast('Endpoints successfully imported and merged!')
+  } catch (err: unknown) {
+    const e = err as { response?: { data?: { detail?: string } } }
+    showToast(e?.response?.data?.detail ?? 'Failed to import specification')
+  }
+}
 </script>
 
 <template>
@@ -260,6 +326,37 @@ async function copyToClipboard(text: string, label: string) {
         <span class="base-badge">/mock/{{ app.slug }}</span>
       </div>
       <div class="topbar-right">
+        <button
+          class="btn btn--outline"
+          @click="showImportModal = true"
+        >
+          <Upload :size="14" class="btn-icon" />
+          <span>Import Spec</span>
+        </button>
+
+        <div class="dropdown-wrapper">
+          <button
+            class="btn btn--outline"
+            :disabled="isExporting"
+            @click="showExportMenu = !showExportMenu"
+          >
+            <Download :size="14" class="btn-icon" />
+            <span>{{ isExporting ? 'Exporting...' : 'Export' }}</span>
+            <ChevronDown :size="12" class="chevron-icon" />
+          </button>
+
+          <div v-if="showExportMenu" class="dropdown-menu" @click="showExportMenu = false">
+            <button class="dropdown-item" @click="handleExportOpenApi">
+              <FileCode :size="14" class="item-icon" />
+              <span>OpenAPI 3.0 (JSON)</span>
+            </button>
+            <button class="dropdown-item" @click="handleExportPostman">
+              <FileCode :size="14" class="item-icon" />
+              <span>Postman Collection (JSON)</span>
+            </button>
+          </div>
+        </div>
+
         <button
           class="btn btn--outline"
           @click="router.push({ name: 'application-settings', params: { id: app.id } })"
@@ -562,6 +659,15 @@ async function copyToClipboard(text: string, label: string) {
         </form>
       </div>
     </div>
+
+    <!-- Import Specification Modal -->
+    <ImportSpecModal
+      :show="showImportModal"
+      :target-app-id="app.id"
+      :target-app-name="app.name"
+      @close="showImportModal = false"
+      @imported="handleImportIntoApp"
+    />
   </div>
 </template>
 
@@ -572,6 +678,61 @@ async function copyToClipboard(text: string, label: string) {
   height: calc(100vh - 60px);
   background: var(--bg-app, #09090b);
   color: var(--text-main, #f4f4f7);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-surface-elevated, #181820);
+  border: 1px solid var(--border-subtle, #22222e);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 0.35rem;
+  z-index: 100;
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-main, #f4f4f7);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast, 0.15s);
+  width: 100%;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.chevron-icon {
+  margin-left: 0.25rem;
+}
+
+.item-icon {
+  color: var(--primary, #7c3aed);
 }
 
 .toast-popup {
