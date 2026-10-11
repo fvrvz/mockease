@@ -22,8 +22,11 @@ node_modules/
 dist/
 .eslintcache
 
-# Logs
+# Logs & Run Runtime
 *.log
+.logs/
+.run/
+*.pid
 
 # Docker
 
