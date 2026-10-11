@@ -330,7 +330,7 @@ async function handleImportIntoApp(data: { spec: string }) {
           class="btn btn--outline"
           @click="showImportModal = true"
         >
-          <Upload :size="14" class="btn-icon" />
+          <Download :size="14" class="btn-icon" />
           <span>Import Spec</span>
         </button>
 
@@ -340,7 +340,7 @@ async function handleImportIntoApp(data: { spec: string }) {
             :disabled="isExporting"
             @click="showExportMenu = !showExportMenu"
           >
-            <Download :size="14" class="btn-icon" />
+            <Upload :size="14" class="btn-icon" />
             <span>{{ isExporting ? 'Exporting...' : 'Export' }}</span>
             <ChevronDown :size="12" class="chevron-icon" />
           </button>

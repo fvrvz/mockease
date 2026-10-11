@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Upload } from '@lucide/vue'
+import { Download } from '@lucide/vue'
 import { useApplicationStore } from '@/stores/applications'
 import { applicationService } from '@/services/applications'
 import AppLogo from '@/components/AppLogo.vue'
@@ -105,7 +105,7 @@ async function confirmDelete() {
       </div>
       <div class="dashboard__actions">
         <button class="btn btn--outline" @click="showImportModal = true">
-          <Upload :size="14" class="btn-icon" />
+          <Download :size="14" class="btn-icon" />
           <span>Import Spec</span>
         </button>
         <button class="btn btn--primary" @click="showCreateModal = true">
@@ -139,7 +139,7 @@ async function confirmDelete() {
           Create Application
         </button>
         <button class="btn btn--outline" @click="showImportModal = true">
-          <Upload :size="14" class="btn-icon" />
+          <Download :size="14" class="btn-icon" />
           Import OpenAPI / Postman
         </button>
       </div>
