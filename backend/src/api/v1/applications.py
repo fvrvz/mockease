@@ -12,14 +12,21 @@ from src.db.session import get_db
 from src.models.user import User
 from src.models.application import Application
 from src.models.controller import Controller
-from src.models.endpoint import ApiEndpoint
+from src.models.endpoint import (
+    ApiEndpoint,
+    ApiRequestParam,
+    ApiRequestBody,
+    ApiResponseHeader,
+)
 from src.models.auth_config import AuthConfig
 from src.schemas.entities import (
     ApplicationCreate,
     ApplicationUpdate,
     ApplicationResponse,
     AuthConfigSchema,
+    ImportSpecRequest,
 )
+from src.services.openapi_service import OpenApiService
 from src.utils.slugify import unique_slug
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -137,6 +144,55 @@ async def create_application(
     )
 
 
+@router.post("/import/openapi", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
+async def import_openapi(
+    body: ImportSpecRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        parsed_data = OpenApiService.parse_spec_data(body.spec)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse specification: {str(e)}")
+
+    app = await OpenApiService.create_application_from_spec(
+        db=db,
+        user_id=current_user.id,
+        parsed_data=parsed_data,
+        override_name=body.name,
+    )
+
+    reloaded_q = (
+        select(Application)
+        .where(Application.id == app.id)
+        .options(
+            selectinload(Application.auth_config),
+            selectinload(Application.controllers).selectinload(Controller.endpoints),
+        )
+    )
+    reloaded_app = (await db.execute(reloaded_q)).scalar_one()
+
+    active_controllers = [c for c in reloaded_app.controllers if c.deleted_at is None]
+    endpoints = [
+        ep for c in active_controllers for ep in c.endpoints if ep.deleted_at is None
+    ]
+    enabled_count = sum(1 for ep in endpoints if ep.is_enabled)
+
+    return ApplicationResponse(
+        id=reloaded_app.id,
+        name=reloaded_app.name,
+        slug=reloaded_app.slug,
+        description=reloaded_app.description,
+        is_enabled=reloaded_app.is_enabled,
+        created_at=reloaded_app.created_at,
+        updated_at=reloaded_app.updated_at,
+        controller_count=len(active_controllers),
+        endpoint_count=len(endpoints),
+        enabled_endpoint_count=enabled_count,
+        disabled_endpoint_count=len(endpoints) - enabled_count,
+        auth_config=map_auth_config(reloaded_app.auth_config),
+    )
+
 
 @router.get("/{app_id}", response_model=ApplicationResponse)
 async def get_application(
@@ -181,6 +237,136 @@ async def get_application(
         disabled_endpoint_count=len(endpoints) - enabled_count,
         auth_config=map_auth_config(app.auth_config),
     )
+
+
+@router.post("/{app_id}/import/openapi", response_model=ApplicationResponse)
+async def import_spec_into_application(
+    app_id: uuid.UUID,
+    body: ImportSpecRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    query = select(Application).where(
+        Application.id == app_id,
+        Application.user_id == current_user.id,
+        Application.deleted_at.is_(None),
+    )
+    res = await db.execute(query)
+    app = res.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    try:
+        parsed_data = OpenApiService.parse_spec_data(body.spec)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse specification: {str(e)}")
+
+    await OpenApiService.merge_spec_into_application(db, app, parsed_data)
+
+    reloaded_q = (
+        select(Application)
+        .where(Application.id == app.id)
+        .options(
+            selectinload(Application.auth_config),
+            selectinload(Application.controllers).selectinload(Controller.endpoints),
+        )
+    )
+    reloaded_app = (await db.execute(reloaded_q)).scalar_one()
+
+    active_controllers = [c for c in reloaded_app.controllers if c.deleted_at is None]
+    endpoints = [
+        ep for c in active_controllers for ep in c.endpoints if ep.deleted_at is None
+    ]
+    enabled_count = sum(1 for ep in endpoints if ep.is_enabled)
+
+    return ApplicationResponse(
+        id=reloaded_app.id,
+        name=reloaded_app.name,
+        slug=reloaded_app.slug,
+        description=reloaded_app.description,
+        is_enabled=reloaded_app.is_enabled,
+        created_at=reloaded_app.created_at,
+        updated_at=reloaded_app.updated_at,
+        controller_count=len(active_controllers),
+        endpoint_count=len(endpoints),
+        enabled_endpoint_count=enabled_count,
+        disabled_endpoint_count=len(endpoints) - enabled_count,
+        auth_config=map_auth_config(reloaded_app.auth_config),
+    )
+
+
+@router.get("/{app_id}/export/openapi")
+async def export_openapi(
+    app_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    query = (
+        select(Application)
+        .where(
+            Application.id == app_id,
+            Application.user_id == current_user.id,
+            Application.deleted_at.is_(None),
+        )
+        .options(
+            selectinload(Application.auth_config),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.request_params),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.request_body),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.response_headers),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.auth_config),
+        )
+    )
+    result = await db.execute(query)
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    return OpenApiService.export_to_openapi(app)
+
+
+@router.get("/{app_id}/export/postman")
+async def export_postman(
+    app_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    query = (
+        select(Application)
+        .where(
+            Application.id == app_id,
+            Application.user_id == current_user.id,
+            Application.deleted_at.is_(None),
+        )
+        .options(
+            selectinload(Application.auth_config),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.request_params),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.request_body),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.response_headers),
+            selectinload(Application.controllers)
+            .selectinload(Controller.endpoints)
+            .selectinload(ApiEndpoint.auth_config),
+        )
+    )
+    result = await db.execute(query)
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    return OpenApiService.export_to_postman(app)
 
 
 @router.patch("/{app_id}", response_model=ApplicationResponse)

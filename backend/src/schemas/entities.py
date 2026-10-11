@@ -159,3 +159,9 @@ class EndpointResponse(BaseModel):
     request_body: RequestBodySchema | None = None
     response_headers: list[ResponseHeaderSchema] = []
 
+
+class ImportSpecRequest(BaseModel):
+    spec: str | dict[str, Any]
+    name: str | None = None
+
+

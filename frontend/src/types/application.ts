@@ -28,3 +28,9 @@ export interface UpdateApplicationRequest {
   auth_config?: Partial<AuthConfig> | null
 }
 
+export interface ImportSpecRequest {
+  spec: string | Record<string, unknown>
+  name?: string
+}
+
+
