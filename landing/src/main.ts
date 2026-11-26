@@ -193,7 +193,7 @@ const renderOpenApiSection = (): void => {
 parseBtn?.addEventListener('click', () => {
   if (genBadge) genBadge.textContent = 'REGENERATED ✓';
   if (genRoutesEl) {
-    animate(genRoutesEl.children, { opacity: [0.3, 1], x: [-8, 0] }, { duration: 0.3, delay: stagger(0.06) });
+    animate(genRoutesEl.querySelectorAll<HTMLElement>('.wb-gen-row'), { opacity: [0.3, 1], x: [-8, 0] }, { duration: 0.3, delay: stagger(0.06) });
   }
 });
 
