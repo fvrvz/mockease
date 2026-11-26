@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="MockEase — Interactive REST API mocking workbench. Deploy on-prem with Docker or run as a cloud SaaS."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>MockEase — Interactive REST API Mocking Workbench</title>
+  </head>
+  <body>
+    <header class="wb-header">
+      <nav class="wb-container wb-nav" aria-label="Primary">
+        <a href="#" class="wb-brand">
+          <img src="/favicon.svg" alt="" width="26" height="26" />
+          <span>MockEase</span>
+          <span class="wb-tag wb-mono">v0.8</span>
+        </a>
+
+        <div class="wb-nav-actions">
+          <a href="#sandbox" class="wb-link wb-hide-sm">Sandbox</a>
+          <a href="#openapi" class="wb-link wb-hide-sm">OpenAPI</a>
+          <a href="#deploy" class="wb-link wb-hide-sm">Deploy</a>
+          <button id="wb-theme-btn" type="button" class="wb-icon-btn" aria-label="Toggle theme"></button>
+          <a
+            href="https://github.com/fvrvz/mockease"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="wb-btn wb-btn-amber"
+          >
+            GitHub
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero + Live Interactive Workbench -->
+      <section id="sandbox" class="wb-hero">
+        <div class="wb-container wb-hero-grid">
+          <div class="wb-hero-copy wb-animate">
+            <div class="wb-eyebrow wb-mono">
+              <span class="wb-pulse"></span>
+              ON-PREM &amp; SAAS API MOCK ENGINE
+            </div>
+            <h1 class="wb-title">
+              Ship frontends before the backend exists.
+            </h1>
+            <p class="wb-subtitle">
+              Define dynamic REST endpoints, inject realistic latency or chaos faults, and import OpenAPI specs in seconds—inside your Docker stack or in the cloud.
+            </p>
+            <div class="wb-cta-row">
+              <a href="#deploy" class="wb-btn wb-btn-amber">Deploy MockEase</a>
+              <a href="#openapi" class="wb-btn">Try OpenAPI Converter</a>
+            </div>
+            <div class="wb-kpis wb-mono">
+              <div>
+                <div class="wb-kpi-val">&lt; 5ms</div>
+                <div class="wb-kpi-lbl">Engine Overhead</div>
+              </div>
+              <div>
+                <div class="wb-kpi-val">OpenAPI 3.1</div>
+                <div class="wb-kpi-lbl">1-Click Import</div>
+              </div>
+              <div>
+                <div class="wb-kpi-val">Docker / SaaS</div>
+                <div class="wb-kpi-lbl">Zero Lock-In</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Simulator Workbench -->
+          <div class="wb-workbench wb-animate" aria-label="Interactive Mock API Simulator">
+            <div class="wb-wb-bar">
+              <div class="wb-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <span class="wb-mono wb-wb-title">mockease-workbench · live simulator</span>
+              <span id="wb-sim-status-pill" class="wb-status-pill wb-mono">READY</span>
+            </div>
+
+            <div class="wb-route-tabs" id="wb-route-tabs"></div>
+
+            <div class="wb-controls-row">
+              <div class="wb-control-group">
+                <label class="wb-label wb-mono" for="wb-status-select">Status</label>
+                <select id="wb-status-select" class="wb-select wb-mono">
+                  <option value="200">200 OK</option>
+                  <option value="201">201 Created</option>
+                  <option value="429">429 Rate Limit</option>
+                  <option value="500">500 Error</option>
+                </select>
+              </div>
+
+              <div class="wb-control-group" style="flex: 1;">
+                <label class="wb-label wb-mono" for="wb-latency-range">
+                  Latency: <strong id="wb-latency-val">180ms</strong>
+                </label>
+                <input id="wb-latency-range" type="range" min="0" max="1500" step="30" value="180" class="wb-range" />
+              </div>
+
+              <label class="wb-chaos-toggle wb-mono">
+                <input id="wb-chaos-check" type="checkbox" />
+                <span>20% Chaos (503)</span>
+              </label>
+
+              <button id="wb-send-btn" type="button" class="wb-btn wb-btn-amber">
+                Send Request ▶
+              </button>
+            </div>
+
+            <div class="wb-panes">
+              <div class="wb-pane">
+                <div class="wb-pane-head wb-mono">
+                  <span>RESPONSE PAYLOAD</span>
+                  <span id="wb-elapsed-label">180ms · application/json</span>
+                </div>
+                <pre id="wb-json-output" class="wb-code wb-mono"></pre>
+              </div>
+
+              <div class="wb-pane">
+                <div class="wb-pane-head wb-mono">
+                  <span>LIVE REQUEST LOG</span>
+                  <button id="wb-clear-log" type="button" class="wb-mini-btn wb-mono">Clear</button>
+                </div>
+                <div id="wb-request-log" class="wb-log-list wb-mono"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive OpenAPI -> Live Mocks Converter -->
+      <section id="openapi" class="wb-section">
+        <div class="wb-container">
+          <div class="wb-section-head wb-reveal">
+            <div>
+              <span class="wb-eyebrow wb-mono">OPENAPI 3.X IMPORT</span>
+              <h2 class="wb-h2">Paste a spec. Get live mock routes immediately.</h2>
+            </div>
+            <div class="wb-segmented" id="wb-spec-tabs"></div>
+          </div>
+
+          <div class="wb-converter-grid wb-reveal">
+            <div class="wb-card">
+              <div class="wb-pane-head wb-mono">
+                <span>OPENAPI SPECIFICATION</span>
+                <button id="wb-parse-btn" type="button" class="wb-btn wb-btn-amber" style="height: 28px; font-size: 0.76rem; padding: 0 0.7rem;">
+                  Generate Mocks →
+                </button>
+              </div>
+              <pre id="wb-spec-preview" class="wb-code wb-mono"></pre>
+            </div>
+
+            <div class="wb-card">
+              <div class="wb-pane-head wb-mono">
+                <span>GENERATED MOCK ENDPOINTS</span>
+                <span id="wb-gen-badge" class="wb-mono" style="color: var(--wb-emerald);">ACTIVE</span>
+              </div>
+              <div id="wb-generated-routes" class="wb-gen-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- On-Premise vs Managed SaaS Switcher -->
+      <section id="deploy" class="wb-section" style="padding-top: 0;">
+        <div class="wb-container">
+          <div class="wb-deploy-box wb-reveal">
+            <div class="wb-section-head" style="margin-bottom: 1.25rem;">
+              <div>
+                <span class="wb-eyebrow wb-mono">DEPLOYMENT ARCHITECTURE</span>
+                <h2 class="wb-h2" id="wb-deploy-title">On-Premise / Self-Hosted</h2>
+                <p id="wb-deploy-sub" class="wb-subtitle" style="margin: 0.35rem 0 0; max-width: 58ch;"></p>
+              </div>
+              <div class="wb-segmented" id="wb-deploy-tabs">
+                <button type="button" class="wb-seg-btn" data-mode="onprem" data-active="true">On-Premise Docker</button>
+                <button type="button" class="wb-seg-btn" data-mode="saas">Cloud SaaS</button>
+              </div>
+            </div>
+
+            <div class="wb-cli-bar wb-mono">
+              <span id="wb-deploy-cmd" class="wb-cli-text"></span>
+              <button id="wb-copy-cmd" type="button" class="wb-btn" style="height: 30px; font-size: 0.76rem;">Copy</button>
+            </div>
+
+            <div class="wb-deploy-grid">
+              <ul id="wb-deploy-highlights" class="wb-checklist"></ul>
+              <div id="wb-deploy-arch" class="wb-arch-grid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wb-footer">
+      <div class="wb-container wb-footer-inner">
+        <span>MockEase · Built by Faraaz Khan</span>
+        <div class="wb-footer-links">
+          <a href="https://github.com/fvrvz/mockease" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://marketplace.byfaraaz.com" target="_blank" rel="noopener noreferrer">Marketplace</a>
+          <a href="https://www.byfaraaz.com" target="_blank" rel="noopener noreferrer">byfaraaz.com</a>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
